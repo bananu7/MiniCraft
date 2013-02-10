@@ -10,7 +10,7 @@
 #include "CameraAdds.h"
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "Minefield.h"
+#include "World.h"
  
 void keyboard(unsigned char key, int x, int y);
 void display(void);
@@ -51,8 +51,6 @@ CVertexBuffer VboIndex(CVertexBuffer::INDEX_BUFFER, CVertexBuffer::STATIC_DRAW);
 CCameraFly Camera;
 glm::mat4 Model, Projection, View;
 float Time = 0.f;
-
-Minecraft mc;
 
 void init ()
 {
@@ -109,6 +107,7 @@ void init ()
 }
 
 CShader Shader;
+World w (&Shader);
 
 void initShadersEngine()
 {
@@ -258,26 +257,7 @@ void display()
 	glm::mat4 View = Camera.GetViewMat();
 	Shader.SetUniform("View", View);
 
-	for (unsigned x = 0; x < 5; ++x)
-		for (unsigned y = 0; y < 5; ++y)
-			for (unsigned z = 0; z < 5; ++z)
-		{
-			Model = glm::mat4();
-
-			/*Model = glm::translate (Model, glm::vec3(0, 2, -20));
-			
-			Model = glm::rotate(Model, Time, glm::vec3(0.0, 1.0, 0.0));
-			Model = glm::rotate (Model, -Time * 0.5f, glm::vec3(0.0, 0.0, 1.0));
-			Model = glm::rotate (Model, -Time * 0.3f, glm::vec3(1.0, 0.0, 0.0));*/
-
-			Model = glm::translate (Model, glm::vec3(x*2, y*2, z*2));
-			Model = glm::translate (Model, glm::vec3(-2.5, -2.5, -2.5));
-
-			Shader.SetUniform("Model", Model);
-			
-			if (mc.get(x,y,z))
-				glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-		}
+	w.draw();
 
     glDisableVertexAttribArray(0);
  

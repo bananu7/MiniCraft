@@ -1,14 +1,14 @@
 #include "Minefield.h"
 #include <random>
 
-bool Minecraft::get(unsigned x, unsigned y, unsigned z) {
+bool Minefield::get(unsigned x, unsigned y, unsigned z) {
 	return bits[x * size * size + y * size + z];
 }
-void Minecraft::set(unsigned x, unsigned y, unsigned z, bool value) {
+void Minefield::set(unsigned x, unsigned y, unsigned z, bool value) {
 	bits[x * size * size + y * size + z] = value;
 }
 
-Minecraft::Minecraft() {
+Minefield::Minefield() {
 	bits.reset();
 
 	std::random_device rd;
