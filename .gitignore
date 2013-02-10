@@ -16,5 +16,6 @@
 *.sdf
 *.user
 *.sdf
+*.suo
 Debug
 Release
