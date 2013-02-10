@@ -11,3 +11,10 @@
 *.lai
 *.la
 *.a
+
+#VS files
+*.sdf
+*.user
+*.sdf
+Debug
+Release
