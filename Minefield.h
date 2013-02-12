@@ -1,13 +1,15 @@
 #pragma once
-#include <bitset>
+#include <array>
 class Minefield
 {
 	static const unsigned size = 5;
-	std::bitset<size*size*size> bits;
+
+	using TBlockType = unsigned;
+	std::array<TBlockType, size*size*size> data;
 
 public:
-	bool get(unsigned x, unsigned y, unsigned z);
-	void set(unsigned x, unsigned y, unsigned z, bool value);
+	TBlockType get(unsigned x, unsigned y, unsigned z);
+	void set(unsigned x, unsigned y, unsigned z, TBlockType value);
 
 	Minefield();
 };

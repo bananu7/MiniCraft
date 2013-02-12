@@ -8,6 +8,7 @@
 
 #include "Engine.h"
 #include "CameraAdds.h"
+#include "Image.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "World.h"
@@ -46,11 +47,16 @@ void CheckForError()
  
 CVertexAttributeArray Vao;
 CVertexBuffer Vbo(CVertexBuffer::DATA_BUFFER, CVertexBuffer::STATIC_DRAW);
+CVertexBuffer TexVbo(CVertexBuffer::DATA_BUFFER, CVertexBuffer::STATIC_DRAW);
 CVertexBuffer VboIndex(CVertexBuffer::INDEX_BUFFER, CVertexBuffer::STATIC_DRAW);
 
 CCameraFly Camera;
 glm::mat4 Model, Projection, View;
 float Time = 0.f;
+
+CImage Image;
+CShader Shader;
+World w (&Shader);
 
 void init ()
 {
@@ -61,13 +67,16 @@ void init ()
 	Camera.Position = glm::vec3(0, -2, 20);
 
     CheckForError();
- 
+  
+	// create
 	Vao.Bind();
 	Vbo.Bind();
+	TexVbo.Bind();
 	VboIndex.Bind();
 
     CheckForError();
  
+	// specify data
     const float Verts[] = { 
         -1.f, -1.f, -1.f,
 		-1.f, -1.f, 1.f,
@@ -78,6 +87,17 @@ void init ()
 		1.f, 1.f, -1.f,
 		1.f, 1.f, 1.f,
     };
+
+	const float TexCoords[] = {
+		1.f, 1.f,
+		0.f, 1.f,
+		1.f, 0.f,
+		0.f, 0.f,
+		1.f, 1.f,
+		0.f, 1.f,
+		1.f, 0.f,
+		0.f, 0.f,
+	};
 	
 	const unsigned Indices[] = {
 		7, 3, 1,
@@ -95,19 +115,35 @@ void init ()
 
 	};
 
+	// load data
 	Vbo.LoadData(Verts, sizeof(Verts));
+	TexVbo.LoadData(TexCoords, sizeof(TexCoords));
 	VboIndex.LoadData(Indices, sizeof(Indices));
 
+	// give meaning to data
+	Vbo.Bind();
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	TexVbo.Bind();
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
  
     CheckForError();
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
+
+	glEnable(GL_TEXTURE_2D);
+
+	CSimpleFileLoader Loader("data/terrain.png");
+	auto Result = Image.Load(Loader);
+	if (Result != "")
+		_CrtDbgBreak();
+
+	const unsigned texUnitNum = 0;
+	Image.Bind(texUnitNum);
+	Shader.SetTex("Texture", texUnitNum);
 }
 
-CShader Shader;
-World w (&Shader);
+
 
 void initShadersEngine()
 {
@@ -116,22 +152,33 @@ void initShadersEngine()
             "#version 400 core"
           NL"precision highp float;"
           NL"layout(location = 0) in vec3 position;"
+		  NL"layout(location = 1) in vec2 texCoord;"
 		  NL"out vec3 out_position;"
+		  NL"out vec2 out_texCoord;"
 		  NL
 		  NL"uniform mat4 Model, Projection, View;"
+		  NL"uniform vec2 TexOffset;"
+		  NL
           NL"void main () {"
 		  NL"    out_position = position;"
+		  NL"    out_texCoord = TexOffset + texCoord;"
           NL"    gl_Position = Projection * View * Model * vec4(position, 1.0);"
           NL"}";
 	
 	std::string Frag = 
             "#version 400 core"
 		  NL"in vec3 out_position;"
+		  NL"in vec2 out_texCoord;"
 		  NL"uniform float bias;"
 		  NL"out vec4 out_Color;"
+		  NL
+		  NL"uniform sampler2D Texture;"
+		  NL
           NL"void main () {"
         //NL"    out_Color = vec4(0.0, 1.0, 0.0, 1.0);"
-		  NL"    out_Color = vec4((out_position.xyz + 1)/2, 1.0);"
+		 // NL"    out_Color = vec4((out_position.xyz + 1)/2, 1.0);"
+		  //NL"    out_Color = vec4(out_texCoord, 0.0, 1.0);"
+		  NL"    out_Color = vec4(texture(Texture, out_texCoord).rgb, 1.0);"
           NL"}";
 
 	using uc = unsigned char;
@@ -252,6 +299,7 @@ void display()
 	//Shader.SetUniform("Projection", Projection);
 	
     glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
     
 	Camera.CalculateView();	
 	glm::mat4 View = Camera.GetViewMat();
@@ -260,6 +308,7 @@ void display()
 	w.draw();
 
     glDisableVertexAttribArray(0);
+	glDisableVertexAttribArray(1);
  
     glFlush();
 	glutPostRedisplay ();

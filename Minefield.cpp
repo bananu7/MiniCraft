@@ -1,15 +1,16 @@
 #include "Minefield.h"
 #include <random>
 
-bool Minefield::get(unsigned x, unsigned y, unsigned z) {
-	return bits[x * size * size + y * size + z];
+Minefield::TBlockType Minefield::get(unsigned x, unsigned y, unsigned z) {
+	return data[x * size * size + y * size + z];
 }
-void Minefield::set(unsigned x, unsigned y, unsigned z, bool value) {
-	bits[x * size * size + y * size + z] = value;
+void Minefield::set(unsigned x, unsigned y, unsigned z, Minefield::TBlockType value) {
+	data[x * size * size + y * size + z] = value;
 }
 
 Minefield::Minefield() {
-	bits.reset();
+	for (auto & i : data)
+		i = 0;
 
 	std::random_device rd;
 	for (unsigned x = 0; x < size; ++x)

@@ -31,7 +31,7 @@ void World::draw()
 
 					shader->SetUniform("Model", Model);
 
-					//shader->SetUniform("TexCoord", calculateTilePosition();
+					shader->SetUniform("TexOffset", calculateTilePosition(block));
 			
 					glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 				}
