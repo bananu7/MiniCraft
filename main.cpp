@@ -62,7 +62,7 @@ void init ()
 {
 	Model = glm::mat4(1.0);
 	//Projection = glm::ortho(-8.0, 8.0, 8.0, -8.0, -16.0, 16.0);
-	Projection = glm::perspective(70.0, 16.0/10.0, 1.0, 100.0);
+	Projection = glm::perspective(70.0, 16.0/10.0, 0.1, 100.0);
 
 	Camera.Position = glm::vec3(0, -2, 20);
 
@@ -87,44 +87,66 @@ void init ()
 		1.f, 1.f, -1.f,
 		1.f, 1.f, 1.f,
     };
+	
+	/*
 
-	const float TexCoords[] = {
-		1.f, 1.f,
-		0.f, 1.f,
-		1.f, 0.f,
-		0.f, 0.f,
-		1.f, 1.f,
-		0.f, 1.f,
-		1.f, 0.f,
-		0.f, 0.f,
+	   2------6
+	  /      /|
+	 /      / |
+	3--0---7  4
+	|      | /
+	|      |/
+	1------5
+
+	*/
+
+	#define vert(n) Verts[(n)*3],Verts[(n)*3+1],Verts[(n)*3+2]
+
+	const float RotationlessCube[] = {
+		// front
+		vert(7), 1.f, 0.f, vert(3), 0.f, 0.f, vert(1), 0.f, 1.f,
+		vert(7), 1.f, 0.f, vert(1), 0.f, 1.f, vert(5), 1.f, 1.f,
+
+		// right
+		vert(6), 1.f, 0.f, vert(7), 0.f, 0.f, vert(5), 0.f, 1.f,
+		vert(6), 1.f, 0.f, vert(5), 0.f, 1.f, vert(4), 1.f, 1.f,
+
+		// back
+		vert(2), 1.f, 0.f, vert(6), 0.f, 0.f, vert(4), 0.f, 1.f,
+		vert(2), 1.f, 0.f, vert(4), 0.f, 1.f, vert(0), 1.f, 1.f,
+
+		// left
+		vert(3), 1.f, 0.f, vert(2), 0.f, 0.f, vert(0), 0.f, 1.f,
+		vert(3), 1.f, 0.f, vert(0), 0.f, 1.f, vert(1), 1.f, 1.f,
+
+		// top
+		vert(6), 1.f, 0.f, vert(2), 0.f, 0.f, vert(3), 0.f, 1.f,
+		vert(6), 1.f, 0.f, vert(3), 0.f, 1.f, vert(7), 1.f, 1.f,
+
+		// bottom
+		vert(5), 1.f, 0.f, vert(1), 0.f, 0.f, vert(0), 0.f, 1.f,
+		vert(5), 1.f, 0.f, vert(0), 0.f, 1.f, vert(4), 1.f, 1.f,
+	};
+
+	/*const float TopCube[] = {
+		0.f
 	};
 	
-	const unsigned Indices[] = {
-		7, 3, 1,
-		7, 1, 5,
-		6, 7, 5,
-		6, 5, 4,
-		2, 6, 4,
-		2, 4, 0,
-		3, 2, 0,
-		3, 0, 1,
-		6, 2, 3,
-		6, 3, 7,
-		5, 1, 0,
-		5, 0, 4,
+	const float OrientedCube[] = {
+		vert(7), 1.f, 0.f,
+		vert(3), 0.f, 0.f,
+		vert(1), 0.f, 1.f,
+	};*/
 
-	};
+	#undef vert
 
 	// load data
-	Vbo.LoadData(Verts, sizeof(Verts));
-	TexVbo.LoadData(TexCoords, sizeof(TexCoords));
-	VboIndex.LoadData(Indices, sizeof(Indices));
+	Vbo.LoadData(RotationlessCube, sizeof(RotationlessCube));
 
 	// give meaning to data
 	Vbo.Bind();
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	TexVbo.Bind();
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (GLvoid*)(3 * sizeof(float)));
  
     CheckForError();
 
@@ -132,15 +154,6 @@ void init ()
 	glEnable(GL_CULL_FACE);
 
 	glEnable(GL_TEXTURE_2D);
-
-	CSimpleFileLoader Loader("data/terrain.png");
-	auto Result = Image.Load(Loader);
-	if (Result != "")
-		_CrtDbgBreak();
-
-	const unsigned texUnitNum = 0;
-	Image.Bind(texUnitNum);
-	Shader.SetTex("Texture", texUnitNum);
 }
 
 
@@ -173,12 +186,15 @@ void initShadersEngine()
 		  NL"out vec4 out_Color;"
 		  NL
 		  NL"uniform sampler2D Texture;"
+		  NL"uniform vec2 TexOffset;"
 		  NL
           NL"void main () {"
         //NL"    out_Color = vec4(0.0, 1.0, 0.0, 1.0);"
 		 // NL"    out_Color = vec4((out_position.xyz + 1)/2, 1.0);"
-		  //NL"    out_Color = vec4(out_texCoord, 0.0, 1.0);"
-		  NL"    out_Color = vec4(texture(Texture, out_texCoord).rgb, 1.0);"
+		//  NL"    out_Color = vec4(out_texCoord, 0.0, 1.0);"
+		  NL"    vec2 tc = (out_texCoord / 16.0) + TexOffset;"
+		  //NL"    vec2 tc = out_texCoord;"
+		  NL"    out_Color = vec4(texture(Texture, tc).rgb, 1.0);"
           NL"}";
 
 	using uc = unsigned char;
@@ -197,6 +213,21 @@ void initShadersEngine()
 
 	// FIXME : rekompilacja psuje uniformy!
 //	Shader.Compile();
+}
+
+void initResources()
+{
+	CSimpleFileLoader Loader("../data/terrain.png");
+	auto Result = Image.Load(Loader);
+	//if (Result != "")
+	//	_CrtDbgBreak();
+
+	const unsigned texUnitNum = 0;
+	Image.Bind(texUnitNum);
+	// pixels!
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	Shader.SetTex("Texture", texUnitNum);
 }
 
 #ifdef _WINDOWS
@@ -234,6 +265,7 @@ int main(int argc, char** argv)
  
     init();
 	initShadersEngine();
+	initResources();
  
     glutKeyboardFunc(&keyboard);
     glutDisplayFunc(&display);

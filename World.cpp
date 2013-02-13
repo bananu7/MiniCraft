@@ -6,14 +6,16 @@
 
 glm::vec2 calculateTilePosition (unsigned number)
 {
-	return glm::vec2 ((number % 16) / 15.0, (number / 16) / 15.0);
+	return glm::vec2 ((number % 16) / 17.0, (number / 16) / 16.0);
 }
 
 void World::draw()
 {
-	for (unsigned x = 0; x < 5; ++x)
-		for (unsigned y = 0; y < 5; ++y)
-			for (unsigned z = 0; z < 5; ++z)
+	const unsigned size = field.getSize();
+
+	for (unsigned x = 0; x < size; ++x)
+		for (unsigned y = 0; y < size; ++y)
+			for (unsigned z = 0; z < size; ++z)
 			{
 				auto block = field.get(x,y,z);
 				if (block)
@@ -31,9 +33,12 @@ void World::draw()
 
 					shader->SetUniform("Model", Model);
 
-					shader->SetUniform("TexOffset", calculateTilePosition(block));
+//					block = 1;
+
+					shader->SetUniform("TexOffset", calculateTilePosition(block - 1));
 			
-					glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+					//glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+					glDrawArrays(GL_TRIANGLES, 0, 36);
 				}
 			}
 }

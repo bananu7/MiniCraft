@@ -20,9 +20,10 @@ Minefield::Minefield() {
 			val -= rd.min();
 			double val_norm = static_cast<double>(val) / rd.max();
 
-			val = static_cast<unsigned int>(val_norm * size);
+			const unsigned max_height = 16;
+			val = static_cast<unsigned int>(val_norm * max_height);
 
 			for (unsigned y = 0; y < val; ++y)
-				set(x, y, z, true);
+				set(x, y, z, y);
 		}
 }
