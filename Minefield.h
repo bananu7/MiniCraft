@@ -2,7 +2,7 @@
 #include <array>
 class Minefield
 {
-	static const unsigned size = 70;
+	static const unsigned size = 200;
 	using TBlockType = unsigned;
 	std::array<TBlockType, size*size*size> data;
 

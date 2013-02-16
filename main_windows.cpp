@@ -45,13 +45,11 @@ void CheckForError()
         _CrtDbgBreak();
 }
  
-CVertexAttributeArray Vao;
-CVertexBuffer Vbo(CVertexBuffer::DATA_BUFFER, CVertexBuffer::STATIC_DRAW);
-CVertexBuffer TexVbo(CVertexBuffer::DATA_BUFFER, CVertexBuffer::STATIC_DRAW);
-CVertexBuffer VboIndex(CVertexBuffer::INDEX_BUFFER, CVertexBuffer::STATIC_DRAW);
+
+glm::mat4 Projection, View;
 
 CCameraFly Camera;
-glm::mat4 Model, Projection, View;
+
 float Time = 0.f;
 
 CImage Image;
@@ -174,105 +172,17 @@ void CheckForGLError()
 		_CrtDbgBreak();
 }
 
-void init ()
+
+void init()
 {
-	Model = glm::mat4(1.0);
-	//Projection = glm::ortho(-8.0, 8.0, 8.0, -8.0, -16.0, 16.0);
-	Projection = glm::perspective(70.0, 16.0/10.0, 0.1, 100.0);
+	Projection = glm::perspective(70.0, 16.0/10.0, 0.1, 1000.0);
 
 	Camera.Position = glm::vec3(0, -2, 20);
-
-    CheckForError();
-  
-	// create
-	Vao.Bind();
-	Vbo.Bind();
-	TexVbo.Bind();
-	VboIndex.Bind();
-
-    CheckForError();
- 
-	// specify data
-    const float Verts[] = { 
-        -1.f, -1.f, -1.f,
-		-1.f, -1.f, 1.f,
-       -1.f, 1.f, -1.f,
-		-1.f, 1.f, 1.f,
-		1.f, -1.f, -1.f,
-		1.f, -1.f, 1.f,
-		1.f, 1.f, -1.f,
-		1.f, 1.f, 1.f,
-    };
-	
-	/*
-
-	   2------6
-	  /      /|
-	 /      / |
-	3--0---7  4
-	|      | /
-	|      |/
-	1------5
-
-	*/
-
-	#define vert(n) Verts[(n)*3],Verts[(n)*3+1],Verts[(n)*3+2]
-
-	const float RotationlessCube[] = {
-		// front
-		vert(7), 1.f, 0.f, vert(3), 0.f, 0.f, vert(1), 0.f, 1.f,
-		vert(7), 1.f, 0.f, vert(1), 0.f, 1.f, vert(5), 1.f, 1.f,
-
-		// right
-		vert(6), 1.f, 0.f, vert(7), 0.f, 0.f, vert(5), 0.f, 1.f,
-		vert(6), 1.f, 0.f, vert(5), 0.f, 1.f, vert(4), 1.f, 1.f,
-
-		// back
-		vert(2), 1.f, 0.f, vert(6), 0.f, 0.f, vert(4), 0.f, 1.f,
-		vert(2), 1.f, 0.f, vert(4), 0.f, 1.f, vert(0), 1.f, 1.f,
-
-		// left
-		vert(3), 1.f, 0.f, vert(2), 0.f, 0.f, vert(0), 0.f, 1.f,
-		vert(3), 1.f, 0.f, vert(0), 0.f, 1.f, vert(1), 1.f, 1.f,
-
-		// top
-		vert(6), 1.f, 0.f, vert(2), 0.f, 0.f, vert(3), 0.f, 1.f,
-		vert(6), 1.f, 0.f, vert(3), 0.f, 1.f, vert(7), 1.f, 1.f,
-
-		// bottom
-		vert(5), 1.f, 0.f, vert(1), 0.f, 0.f, vert(0), 0.f, 1.f,
-		vert(5), 1.f, 0.f, vert(0), 0.f, 1.f, vert(4), 1.f, 1.f,
-	};
-
-	/*const float TopCube[] = {
-		0.f
-	};
-	
-	const float OrientedCube[] = {
-		vert(7), 1.f, 0.f,
-		vert(3), 0.f, 0.f,
-		vert(1), 0.f, 1.f,
-	};*/
-
-	#undef vert
-
-	// load data
-	Vbo.LoadData(RotationlessCube, sizeof(RotationlessCube));
-
-	// give meaning to data
-	Vbo.Bind();
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (GLvoid*)(3 * sizeof(float)));
- 
-    CheckForError();
-
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 
 	glEnable(GL_TEXTURE_2D);
 }
-
-
 
 void initShadersEngine()
 {
@@ -282,34 +192,31 @@ void initShadersEngine()
           NL"precision highp float;"
           NL"layout(location = 0) in vec3 position;"
 		  NL"layout(location = 1) in vec2 texCoord;"
-		  NL"out vec3 out_position;"
-		  NL"out vec2 out_texCoord;"
+		  NL"layout(location = 2) in vec3 instance_position;"
+		  NL"layout(location = 3) in vec2 instance_texCoord;"
 		  NL
-		  NL"uniform mat4 Model, Projection, View;"
-		  NL"uniform vec2 TexOffset;"
+		  NL"uniform mat4 Projection, View;"
+		  NL
+		  NL"out vec2 var_texCoord;"
 		  NL
           NL"void main () {"
-		  NL"    out_position = position;"
-		  NL"    out_texCoord = TexOffset + texCoord;"
-          NL"    gl_Position = Projection * View * Model * vec4(position, 1.0);"
+		  NL"    var_texCoord = (texCoord) / 16.0 + instance_texCoord;"
+          NL"    gl_Position = Projection * View * vec4(position + instance_position, 1.0);"
           NL"}";
 	
 	std::string Frag = 
             "#version 400 core"
-		  NL"in vec3 out_position;"
-		  NL"in vec2 out_texCoord;"
-		  NL"uniform float bias;"
+		  NL
 		  NL"out vec4 out_Color;"
+		  NL"in vec2 var_texCoord;"
 		  NL
 		  NL"uniform sampler2D Texture;"
-		  NL"uniform vec2 TexOffset;"
 		  NL
           NL"void main () {"
         //NL"    out_Color = vec4(0.0, 1.0, 0.0, 1.0);"
 		 // NL"    out_Color = vec4((out_position.xyz + 1)/2, 1.0);"
 		//  NL"    out_Color = vec4(out_texCoord, 0.0, 1.0);"
-		  NL"    vec2 tc = (out_texCoord / 16.0) + TexOffset;"
-		  //NL"    vec2 tc = out_texCoord;"
+		  NL"    vec2 tc = var_texCoord;"
 		  NL"    out_Color = vec4(texture(Texture, tc).rgb, 1.0);"
           NL"}";
 
@@ -325,7 +232,6 @@ void initShadersEngine()
 	Shader.Bind();
 
 	Shader.SetUniform("Projection", Projection);
-	Shader.SetUniform("Model", Model);
 
 	// FIXME : rekompilacja psuje uniformy!
 //	Shader.Compile();
@@ -390,6 +296,8 @@ int WINAPI WinMain (HINSTANCE hInstance,
 	init();
 	initShadersEngine();
 	initResources();
+	w.init();
+	w.recalcInstances();
 
 	bool Run = true;
 	do 
@@ -419,24 +327,14 @@ int WINAPI WinMain (HINSTANCE hInstance,
 			mouse(p.x/640.0, p.y/400.0);
 			SetCursorPos(640, 400);
 
-
 			// rendering
-
 			glClearColor(0.5f, .5f, .5f, 1.f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
- 
-			//Shader.SetUniform("Projection", Projection);
-	
-			glEnableVertexAttribArray(0);
-			glEnableVertexAttribArray(1);
-    
+
 			Camera.CalculateView();	
 			glm::mat4 View = Camera.GetViewMat();
 			Shader.SetUniform("View", View);
 			w.draw();
-
-			glDisableVertexAttribArray(0);
-			glDisableVertexAttribArray(1);
 		}
 
 		Win.Display();
