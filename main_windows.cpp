@@ -1,5 +1,6 @@
+#include "WinAPIOpenGLWindow.h"
+
 #include <GL/glew.h>
-#include <GL/freeglut.h>
 #include <string>
 #include <iostream>
 #include <array>
@@ -12,11 +13,17 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "World.h"
- 
-void keyboard(unsigned char key, int x, int y);
-void display(void);
-void mouse(int x, int y);
- 
+
+
+bool	keys[256];			// Array Used For The Keyboard Routine
+bool	active = true;		// Window Active Flag Set To TRUE By Default
+bool	fullscreen= true;	// Fullscreen Flag Set To Fullscreen Mode By Default
+
+const unsigned int ScreenXSize = 1280;
+const unsigned int ScreenYSize = 800;
+
+CWinAPIOpenGLWindow Win;
+
 GLuint vboId;
 GLuint vaoId;
 GLuint programId;
@@ -50,6 +57,122 @@ float Time = 0.f;
 CImage Image;
 CShader Shader;
 World w (&Shader);
+
+void registerMouse()
+{
+	#ifndef HID_USAGE_PAGE_GENERIC
+    #define HID_USAGE_PAGE_GENERIC         ((USHORT) 0x01)
+    #endif
+    #ifndef HID_USAGE_GENERIC_MOUSE
+    #define HID_USAGE_GENERIC_MOUSE        ((USHORT) 0x02)
+    #endif
+
+    RAWINPUTDEVICE Rid[1];
+    Rid[0].usUsagePage = HID_USAGE_PAGE_GENERIC; 
+    Rid[0].usUsage = HID_USAGE_GENERIC_MOUSE; 
+    Rid[0].dwFlags = RIDEV_INPUTSINK;   
+	Rid[0].hwndTarget = Win.GetHwnd();
+    RegisterRawInputDevices(Rid, 1, sizeof(Rid[0]));
+}
+
+void mouse(double dmx, double dmy);
+
+
+LRESULT CALLBACK WndProc(	HWND	hWnd,
+							UINT	uMsg,
+							WPARAM	wParam,
+							LPARAM	lParam)
+{
+	switch (uMsg)
+	{
+		case WM_ACTIVATE:
+		{
+			if (LOWORD(wParam) != 0)
+			{
+				active = true;
+				ShowCursor(false);
+			}
+			else
+			{
+				active = false;
+				ShowCursor(true);
+			}
+
+			return 0;								// Return To The Message Loop
+		}
+
+		case WM_SYSCOMMAND:							// Intercept System Commands
+		{
+			switch (wParam)							// Check System Calls
+			{
+				case SC_SCREENSAVE:					// Screensaver Trying To Start?
+				case SC_MONITORPOWER:				// Monitor Trying To Enter Powersave?
+				return 0;							// Prevent From Happening
+			}
+			break;									// Exit
+		}
+
+		case WM_CLOSE:								// Did We Receive A Close Message?
+		{
+			PostQuitMessage(0);						// Send A Quit Message
+			return 0;								// Jump Back
+		}
+
+		case WM_KEYDOWN:							// Is A Key Being Held Down?
+		{
+			keys[wParam] = TRUE;					// If So, Mark It As TRUE
+			return 0;								// Jump Back
+		}
+
+		case WM_KEYUP:								// Has A Key Been Released?
+		{
+			keys[wParam] = FALSE;					// If So, Mark It As FALSE
+			return 0;								// Jump Back
+		}
+
+		case WM_INPUT: 
+		{
+			UINT dwSize = 40;
+			static BYTE lpb[40];
+    
+			GetRawInputData((HRAWINPUT)lParam, RID_INPUT, 
+							lpb, &dwSize, sizeof(RAWINPUTHEADER));
+    
+			RAWINPUT* raw = (RAWINPUT*)lpb;
+    
+			if (raw->header.dwType == RIM_TYPEMOUSE) 
+			{
+				if (raw->data.mouse.usFlags & MOUSE_MOVE_ABSOLUTE)
+				{
+					_CrtDbgBreak();
+				}
+				else
+				{
+					int xPosRelative = raw->data.mouse.lLastX;
+					int yPosRelative = raw->data.mouse.lLastY;
+					mouse(xPosRelative, yPosRelative);
+				}
+			} 
+			return 0;
+		}
+		
+		/*case WM_SIZE:								// Resize The OpenGL Window
+		{
+			Re(LOWORD(lParam),HIWORD(lParam));  // LoWord=Width, HiWord=Height
+			return 0;								// Jump Back
+		}*/
+	}
+
+	// Pass All Unhandled Messages To DefWindowProc
+	return DefWindowProc(hWnd,uMsg,wParam,lParam);
+}
+
+void CheckForGLError()
+{
+	int Err = glGetError();
+	if (Err != 0)
+		_CrtDbgBreak();
+}
 
 void init ()
 {
@@ -223,118 +346,104 @@ void initResources()
 	Shader.SetTex("Texture", texUnitNum);
 }
 
-#ifdef _WINDOWS
-int WINAPI WinMain (HINSTANCE hInstance,
-                    HINSTANCE hPrevInstance,
-                    LPSTR lpCmdLine,
-                    int iCmdShow)
-#else
-int main(int argc, char** argv)
-#endif
+void keyboard()
 {
-	#ifdef _WINDOWS
-    int argc = 1;
-    char* argv[] = {"program.exe"};
-	#endif
-    glutInit(&argc, argv);
-    
-    glutInitContextVersion (4,0);
-	glutInitContextFlags(GLUT_FORWARD_COMPATIBLE);
-    glutInitContextProfile(GLUT_CORE_PROFILE);
-    glutCreateWindow("GLUT Test");
- 
-    glewExperimental=TRUE;
-    GLenum err=glewInit();
-	if(err!=GLEW_OK)
-    {
-  		std::cout<<"glewInit failed, aborting.";
-        _CrtDbgBreak();
-    }
-    // Explicit check for GLEW error
-    err = glGetError();
-    // If it's something different than INVALID_ENUM, we have a problem
-    if (err != GL_INVALID_ENUM)
-        _CrtDbgBreak();
- 
-    init();
+	if (keys['D'])
+		Camera.Strafe(-0.2f);
+
+	if (keys['A'])
+		Camera.Strafe(0.2f);
+
+	if (keys['E'])
+		Camera.LookDir.y += 5;
+	if (keys['Q'])
+		Camera.LookDir.y -= 5;
+
+	if (keys['S'])
+		Camera.Fly(-0.2f);
+	if (keys['W'])
+		Camera.Fly(0.2f);
+	if (keys[VK_SPACE])
+		Camera.Position.y += 0.2;
+	if (keys['C'])
+		Camera.Position.y -= 0.2;
+	if (keys[VK_ESCAPE])
+		PostQuitMessage(0);
+}
+
+void mouse(double dmx, double dmy)
+{
+	Camera.LookDir.y += dmx * 50.0;
+	Camera.LookDir.x += dmy * 50.0;
+}
+
+int WINAPI WinMain (HINSTANCE hInstance,
+					HINSTANCE hPrevInstance,
+					LPSTR lpCmdLine,
+					int iCmdShow)
+{
+	Win.Create("OpenGLUI test", ScreenXSize, ScreenYSize, 32, false, WndProc);
+	Win.Resize(ScreenXSize, ScreenYSize);
+	
+//	registerMouse();
+
+	init();
 	initShadersEngine();
 	initResources();
- 
-    glutKeyboardFunc(&keyboard);
-    glutDisplayFunc(&display);
-	glutMotionFunc(&mouse);
-	glutPassiveMotionFunc(&mouse);
- 
-    glutMainLoop();
- 
-    return EXIT_SUCCESS;
-}
- 
- 
-void keyboard(unsigned char key, int x, int y)
-{
-    switch (key)
-    {
-    case '\x1B':
-        exit(EXIT_SUCCESS);
-        break;
-	case 'd':
-		Camera.Strafe(-0.2f);
-		break;
-	case 'a':
-		Camera.Strafe(0.2f);
-		break;
 
-	case 'e':
-		Camera.LookDir.y += 5;
-		break;
-	case 'q':
-		Camera.LookDir.y -= 5;
-		break;
+	bool Run = true;
+	do 
+	{
+		MSG	msg;
+		if (PeekMessage(&msg,NULL,0,0,PM_REMOVE))	// Is There A Message Waiting?
+		{
+			if (msg.message==WM_QUIT)				// Have We Received A Quit Message?
+			{
+				Run = false;
+			}
+			else									// If Not, Deal With Window Messages
+			{
+				TranslateMessage(&msg);				// Translate The Message
+				DispatchMessage(&msg);				// Dispatch The Message
+			}
+		}
 
-	case 's':
-		Camera.Fly(-0.2f);
-		break;
-	case 'w':
-		Camera.Fly(0.2f);
-		break;
-	case ' ':
-		Camera.Position.y += 0.2;
-		break;
-	case 'c':
-		Camera.Position.y -= 0.2;
-		break;
-    }
-}
+		//input
+		if (active)
+		{
+			keyboard();
+			POINT p;
+			GetCursorPos(&p);
+			p.x -= 640;
+			p.y -= 400;
+			mouse(p.x/640.0, p.y/400.0);
+			SetCursorPos(640, 400);
 
-void mouse(int x, int y)
-{
-	Camera.LookDir.x = (static_cast<float>(y) / 800 - 0.5f ) * 180;
-	Camera.LookDir.y = (static_cast<float>(x) / 800 - 0.5f ) * 180;
-}
+
+			// rendering
+
+			glClearColor(0.5f, .5f, .5f, 1.f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
  
-void display()
-{
-	Time += 0.1f;
-
-    glClearColor(0.5f, .5f, .5f, 1.f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
- 
-	//Shader.SetUniform("Projection", Projection);
+			//Shader.SetUniform("Projection", Projection);
 	
-    glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
+			glEnableVertexAttribArray(0);
+			glEnableVertexAttribArray(1);
     
-	Camera.CalculateView();	
-	glm::mat4 View = Camera.GetViewMat();
-	Shader.SetUniform("View", View);
+			Camera.CalculateView();	
+			glm::mat4 View = Camera.GetViewMat();
+			Shader.SetUniform("View", View);
+			w.draw();
 
-	w.draw();
+			glDisableVertexAttribArray(0);
+			glDisableVertexAttribArray(1);
+		}
 
-    glDisableVertexAttribArray(0);
-	glDisableVertexAttribArray(1);
- 
-    glFlush();
-	glutPostRedisplay ();
-	//Sleep(1);
+		Win.Display();
+	} while (Run);
+
+	return 0;
 }
+
+//=========================================================================================
+
