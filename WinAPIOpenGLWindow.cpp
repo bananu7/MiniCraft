@@ -202,18 +202,6 @@ void CWinAPIOpenGLWindow::Resize(GLsizei width, GLsizei height)		// Resize And I
 	}
 
 	glViewport(0,0,width,height);						// Reset The Current Viewport
-/*
-	glMatrixMode(GL_PROJECTION);						// Select The Projection Matrix
-	glLoadIdentity();									// Reset The Projection Matrix
-
-	// Calculate The Aspect Ratio Of The Window
-	gluPerspective(45.0f,(GLfloat)width/(GLfloat)height,0.1f,100.0f);*/
-	/*glMatrixMode (GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho (0, 1024, 768, 0, -100, 100);
-
-	glMatrixMode(GL_MODELVIEW);							// Select The Modelview Matrix
-	glLoadIdentity();									// Reset The Modelview Matrix*/
 }
 
 void CWinAPIOpenGLWindow::Kill(void)					// Properly Kill The Window

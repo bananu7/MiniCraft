@@ -19,13 +19,13 @@ void World::init()
  
 	// specify data
 	const float Verts[] = { 
-		-1.f, -1.f, -1.f,
-		-1.f, -1.f, 1.f,
-		-1.f, 1.f, -1.f,
-		-1.f, 1.f, 1.f,
-		1.f, -1.f, -1.f,
-		1.f, -1.f, 1.f,
-		1.f, 1.f, -1.f,
+		0.f, 0.f, 0.f,
+		0.f, 0.f, 1.f,
+		0.f, 1.f, 0.f,
+		0.f, 1.f, 1.f,
+		1.f, 0.f, 0.f,
+		1.f, 0.f, 1.f,
+		1.f, 1.f, 0.f,
 		1.f, 1.f, 1.f,
     };
 	
@@ -130,7 +130,7 @@ void World::recalcInstances()
 
 					if (!CanSkip)
 					{
-						Translations.push_back(glm::vec3(x*2.f, y*2.f, z*2.f));
+						Translations.push_back(glm::vec3(x, y, z));
 						Texcoords.push_back(calculateTilePosition(block - 1));
 
 						++visibleCubesCount;
@@ -149,6 +149,7 @@ void World::draw()
 		_CrtDbgBreak();
 
 	vao.Bind();
+	shader->Bind();
 
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
@@ -165,11 +166,171 @@ void World::draw()
 	glDisableVertexAttribArray(3);
 }
 
+#include <fstream>
+
+void World::raycast(float _x, float _y, float _z, float _nx, float _ny, float _nz, float len)
+{
+	double x = _x, y = _y, z = _z;
+	double nx = _nx, ny = _ny, nz = _nz;
+	std::ofstream Log("raycast.txt");
+	Log << "------BEGIN RAYCAST--------\n";
+	Log << "Initial data:\n"
+	<< "pos(xyz) : [" << x << ", " << y << ", " << z << "]\n"
+	<< "normal(xyz) : [" << nx << ", " << ny << ", " << nz << "]\n"
+	<< "maximum length : " << len << "\n";
+
+	const char X_BIT = 1;
+	const char Y_BIT = 2;
+	const char Z_BIT = 4;
+
+	char Octant = 0;
+	Octant |= (nx > 0.f) ? X_BIT : 0;
+	Octant |= (ny > 0.f) ? Y_BIT : 0;
+	Octant |= (nz > 0.f) ? Z_BIT : 0;
+
+	int x_advance = (Octant & X_BIT) ? 1 : -1;
+	int y_advance = (Octant & Y_BIT) ? 1 : -1;
+	int z_advance = (Octant & Z_BIT) ? 1 : -1;
+
+	auto hit_x_plane = [&](double plane){ return (plane - x) / nx; };
+	auto hit_y_plane = [&](double plane){ return (plane - y) / ny; };
+	auto hit_z_plane = [&](double plane){ return (plane - z) / nz; };
+
+	double t_c = 0.f;
+	int current_x, current_y, current_z;
+	double t_x, t_y, t_z; // lengths of the ray intersecting next planes
+	// determine next possible planes
+	glm::vec3 NextPlanes;
+
+	/*
+
+	x/y/z:
+	 -1     0     1     2
+	--|-----|-----|-----|---
+	    -1     0     1     2
+	current_x/y/z:
+
+	*/
+
+	current_x = (x > 0.f) ? static_cast<int>(x) : static_cast<int>(x - 1.f);
+	current_y = (y > 0.f) ? static_cast<int>(y) : static_cast<int>(y - 1.f);
+	current_z = (z > 0.f) ? static_cast<int>(z) : static_cast<int>(z - 1.f);
+
+	Log << "Starting cube : " << current_x << " " << current_y << " " << current_z << '\n';
+
+	int TempBlockVal = 1;
+	
+	while (true)
+	{
+		Log << "-----Pass " << TempBlockVal << " ---------\n";
+
+		NextPlanes.x = (Octant & X_BIT) ? floorf(x) + 1.f : ceilf(x) - 1.f;
+		NextPlanes.y = (Octant & Y_BIT) ? floorf(y) + 1.f : ceilf(y) - 1.f;
+		NextPlanes.z = (Octant & Z_BIT) ? floorf(z) + 1.f : ceilf(z) - 1.f;
+
+		Log << "Next planes to hit : " << NextPlanes.x << ", " << NextPlanes.y << ", " << NextPlanes.z << '\n';
+
+		t_x = hit_x_plane(NextPlanes.x);
+		t_y = hit_y_plane(NextPlanes.y);
+		t_z = hit_z_plane(NextPlanes.z);
+
+		Log << "T values : " << t_x << ", " << t_y << ", " << t_z << '\n';
+
+		double t;
+
+		// calculate entry position
+		// find the lowest value of all 3 components and determine the next voxel
+		if (t_x < t_y) {
+			if (t_x < t_z) {
+				current_x += x_advance;
+				t = t_x;
+
+				// to ensure that no roundings around 0 happen
+				x = static_cast<double>(current_x);
+				y += t * ny;
+				z += t * nz;
+
+				Log << "advancing X by " << x_advance << '\n';
+			}
+			else {
+				current_z += z_advance;
+				t = t_z;
+
+				x += t * nx;
+				y += t * ny;
+				z = static_cast<double>(current_z);
+
+				Log << "advancing Z by " << z_advance << '\n';
+			}
+		}
+		else {
+			if (t_y < t_z) {
+				current_y += y_advance;
+				t = t_y;
+
+				x += t * nx;
+				y = static_cast<double>(current_y);
+				z += t * nz;
+
+				Log << "advancing Y by " << y_advance << '\n';
+			}
+			else {
+				current_z += z_advance;
+				t = t_z;
+
+				x += t * nx;
+				y += t * ny;
+				z = static_cast<double>(current_z);
+
+				Log << "advancing Z by " << z_advance << '\n';
+			}
+		}
+
+		t_c += t;
+
+		Log << "Total ray length : " << t_c << '\n';
+		// ray is too long
+		if (t_c > len)
+			break;
+
+		// recalc current position
+		/*x += t * nx;
+		y += t * ny;
+		z += t * nz;*/
+		/*x = static_cast<double>(current_x) + t*nx;
+		y = static_cast<double>(current_y) + t*ny;
+		z  static_cast<double>(current_z) + t*nz;*/
+
+		/*if (x < 1e-7) x = 0.f;
+		if (y < 1e-7) y = 0.f;
+		if (z < 1e-7) z = 0.f;*/
+
+		Log << "Current position : " << x << ", " << y << ", " << z << '\n';
+
+		if (field.get(current_x, current_y, current_z) == 0)
+		{
+			// TEMP - erase the block
+			field.set(current_x, current_y, current_z, TempBlockVal++);
+			//field.set(current_x, current_y, current_z, 0);
+			recalcInstances();
+			//break;
+		}
+
+		Log << "------- end of pass ---------\n";
+		/*else
+		{
+			continue;
+		}*/
+	}
+	Log << "---------------END OF RAYCAST------------\n";
+}
+
 World::World(CShader* _shader) :
 	shader(_shader),
 	vertexVbo(CVertexBuffer::DATA_BUFFER, CVertexBuffer::STATIC_DRAW),
 	instanceTexcoordsVbo(CVertexBuffer::DATA_BUFFER, CVertexBuffer::STATIC_DRAW),
 	instanceTranslationsVbo(CVertexBuffer::DATA_BUFFER, CVertexBuffer::STATIC_DRAW)
 {
-
+	field.set(1,2,2, 2);
 }
+

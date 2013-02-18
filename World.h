@@ -22,6 +22,8 @@ public:
 	void recalcInstances();
 	void draw();
 
+	void raycast(float x, float y, float z, float nx, float ny, float nz, float l);
+
 	World(CShader* shader);
 };
 

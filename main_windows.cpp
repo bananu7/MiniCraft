@@ -173,6 +173,70 @@ void CheckForGLError()
 }
 
 
+class Line {
+	CVertexBuffer vbo;
+	CVertexAttributeArray vao;
+	CShader shader;
+
+public:
+	Line() : vbo(CVertexBuffer::DATA_BUFFER, CVertexBuffer::STATIC_DRAW)
+	{
+		vao.Bind();
+
+		string vert = 
+		"#version 400 core"
+		NL"precision mediump float;"
+		NL"layout(location = 0) in vec3 in_position;"
+		NL"uniform mat4 Projection, View;"
+		NL"void main() {"
+		NL"    gl_Position = Projection * View * vec4(in_position, 1.0);"
+		NL"}"NL;
+
+		string frag = 
+		"#version 400 core"
+		NL"precision mediump float;"
+		NL"out vec4 out_Color;"
+		NL"void main () {"
+		NL"    out_Color = vec4(1.0, 0.0, 0.0, 1.0);"
+		NL"}"NL;
+
+		CSimpleDirectLoader::TDataMap data;
+		using uc = unsigned char;
+		data["frag"] = vector<uc> (frag.begin(), frag.end());
+		data["vert"] = vector<uc> (vert.begin(), vert.end());
+
+		auto Loader = CSimpleDirectLoader(data);
+		string Result = shader.Load(Loader);
+		if (!Result.empty())
+			_CrtDbgBreak();
+		shader.Bind();
+	}
+
+	void set (glm::vec3 const& start, glm::vec3 const& end)
+	{
+		vao.Bind();
+		std::array<glm::vec3, 2> a;
+		a[0] = start;
+		a[1] = end;
+		vbo.LoadData(a.data(), sizeof(glm::vec3) * 2);
+		vbo.Bind();
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	}
+	void draw (glm::mat4 const& projection, glm::mat4 const& view)
+	{
+		vao.Bind();
+		vbo.Bind();
+		shader.SetUniform("Projection", projection);
+		shader.SetUniform("View", view);
+		shader.Bind();
+		glEnableVertexAttribArray(0);
+		glDrawArrays(GL_LINES, 0, 2);
+		glDisableVertexAttribArray(0);
+	}
+};
+
+Line* g_L;
+
 void init()
 {
 	Projection = glm::perspective(70.0, 16.0/10.0, 0.1, 1000.0);
@@ -273,6 +337,21 @@ void keyboard()
 		Camera.Position.y += 0.2;
 	if (keys['C'])
 		Camera.Position.y -= 0.2;
+
+	if (keys['R'])
+	{
+		glm::mat4 RMatrix = CCamera::CreateRotation(Camera.LookDir.x, Camera.LookDir.y, 0.f);
+		glm::vec3 NormV (RMatrix[0].z, RMatrix[1].z, RMatrix[2].z);
+
+		NormV *= -1.f;
+		
+		w.raycast(Camera.Position.x, Camera.Position.y, Camera.Position.z,
+				  NormV.x, NormV.y, NormV.z,
+				  50.f);
+		g_L->set(Camera.Position, Camera.Position + NormV * 50.f);
+		keys['R'] = false;
+	}
+
 	if (keys[VK_ESCAPE])
 		PostQuitMessage(0);
 }
@@ -298,6 +377,22 @@ int WINAPI WinMain (HINSTANCE hInstance,
 	initResources();
 	w.init();
 	w.recalcInstances();
+
+	float x = -2.5f, y = -2.5f, z = -2.5f;
+	float nx = .3f, ny = .3f, nz = .3f;
+	float l = 50.f;
+
+	float norm = sqrtf(nx*nx+ny*ny+nz*nz);
+	nx /= norm; ny /= norm; nz /= norm;
+
+//	w.raycast(x, y, z, nx, ny, nz, l);
+
+	Line L[3];
+	g_L = &L[2];
+	//L.set(glm::vec3(x, y, z), glm::vec3(nx * l, ny * l, nz * l));
+	L[0].set(glm::vec3(0, -0.05f, 0.f), glm::vec3(0, 0.05f, 0.f));
+	L[1].set(glm::vec3(-0.05f, 0.f, 0.f), glm::vec3(0.05f, 0.f, 0.f));
+	L[2].set(glm::vec3(-0.05f, 0.f, 0.f), glm::vec3(0.05f, 0.f, 0.f));
 
 	bool Run = true;
 	do 
@@ -335,6 +430,9 @@ int WINAPI WinMain (HINSTANCE hInstance,
 			glm::mat4 View = Camera.GetViewMat();
 			Shader.SetUniform("View", View);
 			w.draw();
+			L[0].draw(glm::mat4(1.0), glm::mat4(1.0));
+			L[1].draw(glm::mat4(1.0), glm::mat4(1.0));
+			L[2].draw(Projection, View);
 		}
 
 		Win.Display();
@@ -344,4 +442,5 @@ int WINAPI WinMain (HINSTANCE hInstance,
 }
 
 //=========================================================================================
+
 
