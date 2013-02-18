@@ -338,18 +338,38 @@ void keyboard()
 	if (keys['C'])
 		Camera.Position.y -= 0.2;
 
-	if (keys['R'])
+	if (keys['R']) // remove
 	{
 		glm::mat4 RMatrix = CCamera::CreateRotation(Camera.LookDir.x, Camera.LookDir.y, 0.f);
 		glm::vec3 NormV (RMatrix[0].z, RMatrix[1].z, RMatrix[2].z);
-
 		NormV *= -1.f;
 		
-		w.raycast(Camera.Position.x, Camera.Position.y, Camera.Position.z,
-				  NormV.x, NormV.y, NormV.z,
-				  50.f);
+		auto result = w.raycast(Camera.Position, NormV, 50.f, World::STOP_ON_FIRST);
+		if (!result.empty())
+		{
+			w.set(result.back(), 0);
+			w.recalcInstances();
+		}
+
 		g_L->set(Camera.Position, Camera.Position + NormV * 50.f);
 		keys['R'] = false;
+	}
+	if (keys['T']) // add
+	{
+		glm::mat4 RMatrix = CCamera::CreateRotation(Camera.LookDir.x, Camera.LookDir.y, 0.f);
+		glm::vec3 NormV (RMatrix[0].z, RMatrix[1].z, RMatrix[2].z);
+		NormV *= -1.f;
+		
+		auto result = w.raycast(Camera.Position, NormV, 50.f,
+			World::INCLUDE_EMPTY | World::STOP_ON_FIRST | World::INCLUDE_FIRST);
+		if (result.size() > 1)
+		{
+			w.set(result[result.size()-2], 9);
+			w.recalcInstances();
+		}
+
+		g_L->set(Camera.Position, Camera.Position + NormV * 50.f);
+		keys['T'] = false;
 	}
 
 	if (keys[VK_ESCAPE])

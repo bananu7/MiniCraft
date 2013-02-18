@@ -2,13 +2,14 @@
 #include "Minefield.h"
 #include <VertexAttributeArray.h>
 #include <VertexBuffer.h>
+#include <glm/glm.hpp>
+#include <vector>
 
 class CShader;
 
 class World
 {
 	Minefield field;
-
 	// rendering
 	CShader* shader;
 	CVertexAttributeArray vao;
@@ -22,7 +23,16 @@ public:
 	void recalcInstances();
 	void draw();
 
-	void raycast(float x, float y, float z, float nx, float ny, float nz, float l);
+	struct CubePos { int x, y, z; CubePos(int _x, int _y, int _z) : x(_x), y(_y), z(_z) {} };
+
+	void set(CubePos const& pos, int val) { field.set(pos.x, pos.y, pos.z, val); }
+
+	enum RayCastParams {
+		STOP_ON_FIRST = 1, // stop on first nonzero cube hit
+		INCLUDE_EMPTY = 2, // include empty(zero) cubes traversed in the results
+		INCLUDE_FIRST = 4  // include the starting cube at the beggining of the result
+	};
+	std::vector<CubePos> raycast(glm::vec3 const& start, glm::vec3 const& normal, float l, int stopOnFirstHit);
 
 	World(CShader* shader);
 };

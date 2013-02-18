@@ -167,12 +167,18 @@ void World::draw()
 }
 
 #include <fstream>
+#include <boost/test/utils/nullstream.hpp>
 
-void World::raycast(float _x, float _y, float _z, float _nx, float _ny, float _nz, float len)
+std::vector<World::CubePos> World::raycast(glm::vec3 const& pos, glm::vec3 const& normal, float len, int raycastParams)
 {
-	double x = _x, y = _y, z = _z;
-	double nx = _nx, ny = _ny, nz = _nz;
-	std::ofstream Log("raycast.txt");
+	double x = pos.x, y = pos.y, z = pos.z;
+	const double nx = normal.x, ny = normal.y, nz = normal.z;
+
+	//std::ofstream Log("raycast.txt");
+	boost::onullstream Log;
+
+	std::vector<World::CubePos> Results;
+
 	Log << "------BEGIN RAYCAST--------\n";
 	Log << "Initial data:\n"
 	<< "pos(xyz) : [" << x << ", " << y << ", " << z << "]\n"
@@ -215,6 +221,9 @@ void World::raycast(float _x, float _y, float _z, float _nx, float _ny, float _n
 	current_x = (x > 0.f) ? static_cast<int>(x) : static_cast<int>(x - 1.f);
 	current_y = (y > 0.f) ? static_cast<int>(y) : static_cast<int>(y - 1.f);
 	current_z = (z > 0.f) ? static_cast<int>(z) : static_cast<int>(z - 1.f);
+
+	if (raycastParams & INCLUDE_FIRST)
+		Results.push_back(CubePos(current_x, current_y, current_z));
 
 	Log << "Starting cube : " << current_x << " " << current_y << " " << current_z << '\n';
 
@@ -287,42 +296,26 @@ void World::raycast(float _x, float _y, float _z, float _nx, float _ny, float _n
 		}
 
 		t_c += t;
-
 		Log << "Total ray length : " << t_c << '\n';
+
 		// ray is too long
 		if (t_c > len)
 			break;
 
-		// recalc current position
-		/*x += t * nx;
-		y += t * ny;
-		z += t * nz;*/
-		/*x = static_cast<double>(current_x) + t*nx;
-		y = static_cast<double>(current_y) + t*ny;
-		z  static_cast<double>(current_z) + t*nz;*/
-
-		/*if (x < 1e-7) x = 0.f;
-		if (y < 1e-7) y = 0.f;
-		if (z < 1e-7) z = 0.f;*/
-
 		Log << "Current position : " << x << ", " << y << ", " << z << '\n';
 
-		if (field.get(current_x, current_y, current_z) == 0)
+		auto currentVal = field.get(current_x, current_y, current_z);
+		if ((currentVal != 0) || (raycastParams & INCLUDE_EMPTY))
 		{
-			// TEMP - erase the block
-			field.set(current_x, current_y, current_z, TempBlockVal++);
-			//field.set(current_x, current_y, current_z, 0);
-			recalcInstances();
-			//break;
+			Results.push_back(World::CubePos(current_x, current_y, current_z));
+			if ((raycastParams & STOP_ON_FIRST) && (currentVal != 0))
+				break;
 		}
-
 		Log << "------- end of pass ---------\n";
-		/*else
-		{
-			continue;
-		}*/
 	}
 	Log << "---------------END OF RAYCAST------------\n";
+
+	return Results;
 }
 
 World::World(CShader* _shader) :
