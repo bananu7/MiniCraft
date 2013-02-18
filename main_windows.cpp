@@ -443,7 +443,7 @@ int WINAPI WinMain (HINSTANCE hInstance,
 			SetCursorPos(640, 400);
 
 			// rendering
-			glClearColor(0.5f, .5f, .5f, 1.f);
+			glClearColor(63.f/255, 215.f/255, 252.f/255, 1.f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 			Camera.CalculateView();	
