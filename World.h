@@ -15,6 +15,7 @@ class World
 	CVertexAttributeArray vao;
 	CVertexBuffer vertexVbo;
 	CVertexBuffer instanceTranslationsVbo, instanceTexcoordsVbo;
+	CVertexBuffer instanceLightingVbo;
 
 	unsigned visibleCubesCount;
 

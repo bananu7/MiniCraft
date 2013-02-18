@@ -91,6 +91,11 @@ void World::init()
 	glEnableVertexAttribArray(3);
 	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 0, 0);
 	glVertexAttribDivisor(3, 1);
+
+	instanceLightingVbo.Bind();
+	glEnableVertexAttribArray(4);
+	glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, 0, 0);
+	glVertexAttribDivisor(4, 1);
 }
 
 void World::recalcInstances()
@@ -98,6 +103,7 @@ void World::recalcInstances()
 	visibleCubesCount = 0;
 	std::vector<glm::vec3> Translations;
 	std::vector<glm::vec2> Texcoords;
+	std::vector<float> Lighting;
 
 	const unsigned size = field.getSize();
 
@@ -108,22 +114,22 @@ void World::recalcInstances()
 				auto block = field.get(x,y,z);
 				if (block)
 				{
-					auto Model = glm::mat4();
 					bool CanSkip = false;
+					int numNeighs = 0;
 
 					if (x > 0 && x < size-1 &&
 					    y > 0 && y < size-1 &&
 					    z > 0 && z < size-1)
 					{
-						if (
-							field.get(x-1, y, z) &&
-							field.get(x, y-1, z) &&
-							field.get(x, y, z-1) &&
-							field.get(x+1, y, z) &&
-							field.get(x, y+1, z) &&
-							field.get(x, y, z+1)
-						)
-						CanSkip = true;
+						numNeighs += field.get(x-1, y, z) ? 1 : 0;
+						numNeighs += field.get(x, y-1, z) ? 1 : 0;
+						numNeighs += field.get(x, y, z-1) ? 1 : 0;
+						numNeighs += field.get(x+1, y, z) ? 1 : 0;
+						numNeighs += field.get(x, y+1, z) ? 1 : 0;
+						numNeighs += field.get(x, y, z+1) ? 1 : 0;
+
+						if (numNeighs == 6)
+							CanSkip = true;
 					}
 
 					// Add frustum culling here?
@@ -132,6 +138,7 @@ void World::recalcInstances()
 					{
 						Translations.push_back(glm::vec3(x, y, z));
 						Texcoords.push_back(calculateTilePosition(block - 1));
+						Lighting.push_back(1.f / numNeighs);
 
 						++visibleCubesCount;
 					}
@@ -140,6 +147,7 @@ void World::recalcInstances()
 
 	instanceTranslationsVbo.LoadData(Translations.data(), sizeof(glm::vec3) * Translations.size());
 	instanceTexcoordsVbo.LoadData(Texcoords.data(), sizeof(glm::vec2) * Texcoords.size());
+	instanceLightingVbo.LoadData(Lighting.data(), sizeof(float) * Lighting.size());
 }
 
 void World::draw()
@@ -155,6 +163,7 @@ void World::draw()
 	glEnableVertexAttribArray(1);
 	glEnableVertexAttribArray(2);
 	glEnableVertexAttribArray(3);
+	glEnableVertexAttribArray(4);
 
 	//	glDrawArrays(GL_TRIANGLES, 0, visibleCubesCount * 36);
 	//glDrawArraysInstancedBaseInstance(GL_TRIANGLES, 0, 36, visibleCubesCount, 0);
@@ -164,6 +173,7 @@ void World::draw()
 	glDisableVertexAttribArray(1);
 	glDisableVertexAttribArray(2);
 	glDisableVertexAttribArray(3);
+	glDisableVertexAttribArray(4);
 }
 
 #include <fstream>

@@ -201,7 +201,7 @@ public:
 		NL"}"NL;
 
 		CSimpleDirectLoader::TDataMap data;
-		using uc = unsigned char;
+		typedef unsigned char uc;
 		data["frag"] = vector<uc> (frag.begin(), frag.end());
 		data["vert"] = vector<uc> (vert.begin(), vert.end());
 
@@ -258,13 +258,16 @@ void initShadersEngine()
 		  NL"layout(location = 1) in vec2 texCoord;"
 		  NL"layout(location = 2) in vec3 instance_position;"
 		  NL"layout(location = 3) in vec2 instance_texCoord;"
+		  NL"layout(location = 4) in float instance_lightIntensity;"
 		  NL
 		  NL"uniform mat4 Projection, View;"
 		  NL
 		  NL"out vec2 var_texCoord;"
+		  NL"out float var_lightIntensity;"
 		  NL
           NL"void main () {"
 		  NL"    var_texCoord = (texCoord) / 16.0 + instance_texCoord;"
+		  NL"    var_lightIntensity = instance_lightIntensity;"
           NL"    gl_Position = Projection * View * vec4(position + instance_position, 1.0);"
           NL"}";
 	
@@ -273,6 +276,7 @@ void initShadersEngine()
 		  NL
 		  NL"out vec4 out_Color;"
 		  NL"in vec2 var_texCoord;"
+		  NL"in float var_lightIntensity;"
 		  NL
 		  NL"uniform sampler2D Texture;"
 		  NL
@@ -281,10 +285,10 @@ void initShadersEngine()
 		 // NL"    out_Color = vec4((out_position.xyz + 1)/2, 1.0);"
 		//  NL"    out_Color = vec4(out_texCoord, 0.0, 1.0);"
 		  NL"    vec2 tc = var_texCoord;"
-		  NL"    out_Color = vec4(texture(Texture, tc).rgb, 1.0);"
+		  NL"    out_Color = vec4(texture(Texture, tc).rgb * var_lightIntensity, 1.0);"
           NL"}";
 
-	using uc = unsigned char;
+	typedef unsigned char uc;
 
 	Data["frag"] = vector<uc> (Frag.begin(), Frag.end());
 	Data["vert"] = vector<uc> (Vert.begin(), Vert.end());
