@@ -309,8 +309,8 @@ void initResources()
 {
 	CSimpleFileLoader Loader("../data/terrain.png");
 	auto Result = Image.Load(Loader);
-	//if (Result != "")
-	//	_CrtDbgBreak();
+	if (Result != "")
+		_CrtDbgBreak();
 
 	const unsigned texUnitNum = 0;
 	Image.Bind(texUnitNum);
