@@ -243,9 +243,9 @@ std::vector<World::CubePos> World::raycast(glm::vec3 const& pos, glm::vec3 const
 	{
 		Log << "-----Pass " << TempBlockVal << " ---------\n";
 
-		NextPlanes.x = (Octant & X_BIT) ? floorf(x) + 1.f : ceilf(x) - 1.f;
-		NextPlanes.y = (Octant & Y_BIT) ? floorf(y) + 1.f : ceilf(y) - 1.f;
-		NextPlanes.z = (Octant & Z_BIT) ? floorf(z) + 1.f : ceilf(z) - 1.f;
+		NextPlanes.x = (Octant & X_BIT) ? floor(x) + 1.f : ceil(x) - 1.f;
+		NextPlanes.y = (Octant & Y_BIT) ? floor(y) + 1.f : ceil(y) - 1.f;
+		NextPlanes.z = (Octant & Z_BIT) ? floor(z) + 1.f : ceil(z) - 1.f;
 
 		Log << "Next planes to hit : " << NextPlanes.x << ", " << NextPlanes.y << ", " << NextPlanes.z << '\n';
 

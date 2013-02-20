@@ -41,9 +41,9 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\PROJECTS\Engine\Engine\include;C:\DEV\freeglut\include;C:\PROJECTS\Engine\dependencies\glm-0.9.4.1;$(IncludePath)</IncludePath>
+    <IncludePath>C:\PROJECTS\Engine\Engine\include;C:\DEV\freeglut\include;C:\PROJECTS\Engine\dependencies\glm-0.9.4.1;C:\PROJECTS\Engine\dependencies\SFML-2.0\include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\DEV\freeglut\lib;C:\PROJECTS\Engine\Debug;$(LibraryPath)</LibraryPath>
-    <IntDir>$(Configuration)\intermediate</IntDir>
+    <IntDir>$(Configuration)\intermediate\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -57,7 +57,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;SFML_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Cpp0xSupport>true</Cpp0xSupport>
     </ClCompile>
     <Link>
@@ -91,7 +91,10 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="main_windows.cpp" />
+    <ClCompile Include="main_sfml.cpp" />
+    <ClCompile Include="main_windows.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="Minefield.cpp" />
     <ClCompile Include="WinAPIOpenGLWindow.cpp" />
     <ClCompile Include="World.cpp" />
