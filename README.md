@@ -15,6 +15,8 @@ I'm putting these at the top; please, don't get this wrong *again*
 
 1. Make *absolutely* sure you got `develop-2.0` branch of Engine
 2. Neither FBX SDK nor Lua is required to build at this moment; they are explicitly marked as optional
+3. SOIL image library isn't used; it has been replaced alltogether by FreeImage. If you happen to stumble on `ImageData.cpp`, just delete it.
+4. The same goes for rapidxml parser (replaced by PugiXML) and `Scene.cpp`
 
 ## Windows ##
 
