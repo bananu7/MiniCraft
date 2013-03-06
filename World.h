@@ -4,18 +4,19 @@
 #include <VertexBuffer.h>
 #include <glm/glm.hpp>
 #include <vector>
+#include <memory>
 
-class CShader;
+namespace engine { class Program; }
 
 class World
 {
 	Minefield field;
 	// rendering
-	CShader* shader;
-	CVertexAttributeArray vao;
-	CVertexBuffer vertexVbo;
-	CVertexBuffer instanceTranslationsVbo, instanceTexcoordsVbo;
-	CVertexBuffer instanceLightingVbo;
+	std::shared_ptr<engine::Program> shader;
+	engine::CVertexAttributeArray vao;
+	engine::CVertexBuffer vertexVbo;
+	engine::CVertexBuffer instanceTranslationsVbo, instanceTexcoordsVbo;
+	engine::CVertexBuffer instanceLightingVbo;
 
 	unsigned visibleCubesCount;
 
@@ -35,6 +36,6 @@ public:
 	};
 	std::vector<CubePos> raycast(glm::vec3 const& start, glm::vec3 const& normal, float l, int stopOnFirstHit);
 
-	World(CShader* shader);
+	World(std::shared_ptr<engine::Program> shader);
 };
 

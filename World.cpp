@@ -328,11 +328,11 @@ std::vector<World::CubePos> World::raycast(glm::vec3 const& pos, glm::vec3 const
 	return Results;
 }
 
-World::World(CShader* _shader) :
-	shader(_shader),
-	vertexVbo(CVertexBuffer::DATA_BUFFER, CVertexBuffer::STATIC_DRAW),
-	instanceTexcoordsVbo(CVertexBuffer::DATA_BUFFER, CVertexBuffer::STATIC_DRAW),
-	instanceTranslationsVbo(CVertexBuffer::DATA_BUFFER, CVertexBuffer::STATIC_DRAW)
+World::World(std::shared_ptr<engine::Program> _shader) :
+	shader(std::move(_shader)),
+	vertexVbo(engine::CVertexBuffer::DATA_BUFFER, engine::CVertexBuffer::STATIC_DRAW),
+	instanceTexcoordsVbo(engine::CVertexBuffer::DATA_BUFFER, engine::CVertexBuffer::STATIC_DRAW),
+	instanceTranslationsVbo(engine::CVertexBuffer::DATA_BUFFER, engine::CVertexBuffer::STATIC_DRAW)
 {
 	field.set(1,2,2, 2);
 }
