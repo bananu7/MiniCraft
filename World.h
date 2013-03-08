@@ -13,10 +13,10 @@ class World
 	Minefield field;
 	// rendering
 	std::shared_ptr<engine::Program> shader;
-	engine::CVertexAttributeArray vao;
-	engine::CVertexBuffer vertexVbo;
-	engine::CVertexBuffer instanceTranslationsVbo, instanceTexcoordsVbo;
-	engine::CVertexBuffer instanceLightingVbo;
+	engine::VertexAttributeArray vao;
+	engine::VertexBuffer vertexVbo;
+	engine::VertexBuffer instanceTranslationsVbo, instanceTexcoordsVbo;
+	engine::VertexBuffer instanceLightingVbo;
 
 	unsigned visibleCubesCount;
 

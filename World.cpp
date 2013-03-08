@@ -1,5 +1,5 @@
 #include "World.h"
-#include "Shader.h"
+#include "shader.h"
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -330,9 +330,9 @@ std::vector<World::CubePos> World::raycast(glm::vec3 const& pos, glm::vec3 const
 
 World::World(std::shared_ptr<engine::Program> _shader) :
 	shader(std::move(_shader)),
-	vertexVbo(engine::CVertexBuffer::DATA_BUFFER, engine::CVertexBuffer::STATIC_DRAW),
-	instanceTexcoordsVbo(engine::CVertexBuffer::DATA_BUFFER, engine::CVertexBuffer::STATIC_DRAW),
-	instanceTranslationsVbo(engine::CVertexBuffer::DATA_BUFFER, engine::CVertexBuffer::STATIC_DRAW)
+	vertexVbo(engine::VertexBuffer::DATA_BUFFER, engine::VertexBuffer::STATIC_DRAW),
+	instanceTexcoordsVbo(engine::VertexBuffer::DATA_BUFFER, engine::VertexBuffer::STATIC_DRAW),
+	instanceTranslationsVbo(engine::VertexBuffer::DATA_BUFFER, engine::VertexBuffer::STATIC_DRAW)
 {
 	field.set(1,2,2, 2);
 }

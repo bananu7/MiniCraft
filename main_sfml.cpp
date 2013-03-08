@@ -7,11 +7,13 @@
 #include <array>
 #include <vector>
 #include <list>
+#include <istream>
+#include <fstream>
 
 #include "Engine.h"
 #include <config.h>
 #include "CameraAdds.h"
-#include "Image.h"
+#include "image.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "World.h"
@@ -38,13 +40,13 @@ template<class T> T& as_lvalue(T&& v){ return v; }
 
 glm::mat4 Projection, View;
 
-engine::CCameraFly Camera;
+engine::CameraFly Camera;
 
 float Time = 0.f;
 
-engine::CImage Image;
-auto Shader = std::make_shared<engine::Program>();
-World w { Shader };
+engine::Image image;
+auto shader = std::make_shared<engine::Program>();
+World w { shader };
 
 void mouse(double dmx, double dmy);
 
@@ -55,13 +57,25 @@ void CheckForGLError()
 		_CrtDbgBreak();
 }
 
+#include <boost/range/istream_range.hpp>
+// istreambuf version of boost::istream_range; required for binary data
+//FIXME traits support and possibly char<->uchar
+template<class Elem> inline
+        boost::iterator_range<std::istreambuf_iterator<Elem> >
+        istreambuf_range(std::basic_istream<Elem>& in)
+        {
+            return boost::iterator_range<std::istreambuf_iterator<Elem> >(
+                std::istreambuf_iterator<Elem>(in),
+                std::istreambuf_iterator<Elem>());
+        }
+
 class Line {
-	engine::CVertexBuffer vbo;
-	engine::CVertexAttributeArray vao;
+	engine::VertexBuffer vbo;
+	engine::VertexAttributeArray vao;
 	engine::Program program;
 
 public:
-	Line() : vbo(engine::CVertexBuffer::DATA_BUFFER, engine::CVertexBuffer::STATIC_DRAW)
+	Line() : vbo(engine::VertexBuffer::DATA_BUFFER, engine::VertexBuffer::STATIC_DRAW)
 	{
 		CheckForGLError();
 
@@ -87,11 +101,7 @@ public:
 		typedef unsigned char uc;
 
 		{
-			engine::CSimpleDirectLoader::TDataMap data;
-			data["data"] = vector<uc> (vert.begin(), vert.end());
-			auto loader = engine::CSimpleDirectLoader(data);
-
-			auto vs = std::make_shared<engine::VertexShader>(loader);
+			auto vs = std::make_shared<engine::VertexShader>(vert);
 			vs->Compile();
 			auto s = vs->Status();
 			if (!s.empty())
@@ -100,11 +110,7 @@ public:
 			CheckForGLError();
 		}
 		{
-			engine::CSimpleDirectLoader::TDataMap data;
-			data["data"] = vector<uc> (frag.begin(), frag.end());
-			auto loader = engine::CSimpleDirectLoader(data);
-
-			auto fs = std::make_shared<engine::FragmentShader>(loader);
+			auto fs = std::make_shared<engine::FragmentShader>(frag);
 			fs->Compile();
 			auto s = fs->Status();
 			if (!s.empty())
@@ -129,6 +135,7 @@ public:
 		catch (std::exception const& e)
 		{
 			MessageBox(0, e.what(), "Program link error", MB_OK | MB_ICONERROR);
+			BREAKPOINT();
 		}
 		
 	}
@@ -174,7 +181,6 @@ void initShadersEngine()
 {
 	CheckForGLError();
 
-	engine::CSimpleDirectLoader::TDataMap Data;
 	std::string vert = 
             "#version 400 core"
           NL"precision highp float;"
@@ -216,63 +222,66 @@ void initShadersEngine()
 	try 
 	{
 		{
-			engine::CSimpleDirectLoader::TDataMap data;
-			data["data"] = vector<uc> (vert.begin(), vert.end());
-			auto loader = engine::CSimpleDirectLoader(data);
-
-			auto vs = std::make_shared<engine::VertexShader>(loader);
+			auto vs = std::make_shared<engine::VertexShader>(vert);
 			vs->Compile();
 			auto s = vs->Status();
 			if (!s.empty())
 				BREAKPOINT();
-			Shader->AttachShader(vs);
+			shader->AttachShader(vs);
 		}
 		CheckForGLError();
 
 		{
-			engine::CSimpleDirectLoader::TDataMap data;
-			data["data"] = vector<uc> (frag.begin(), frag.end());
-			auto loader = engine::CSimpleDirectLoader(data);
-
-			auto fs = std::make_shared<engine::FragmentShader>(loader);
+			auto fs = std::make_shared<engine::FragmentShader>(frag);
 			fs->Compile();
 			auto s = fs->Status();
 			if (!s.empty())
 				BREAKPOINT();
-			Shader->AttachShader(fs);
+			shader->AttachShader(fs);
 		}
 		CheckForGLError();
 	
-		Shader->Link();
+		shader->Link();
 		CheckForGLError();
-		if (!Shader->Validate())
+		if (!shader->Validate())
 			throw std::runtime_error("Program not valid");
-		Shader->Bind();
+		shader->Bind();
 		CheckForGLError();
-		Shader->SetUniform("Projection", Projection);
+		shader->SetUniform("Projection", Projection);
 		CheckForGLError();
 	}
 	catch (std::exception const& e) {
 		MessageBox(0, e.what(), "Exception", MB_OK | MB_ICONERROR);
+		BREAKPOINT();
 	}
 
 	// FIXME : rekompilacja psuje uniformy!
-//	Shader.Compile();
+//	shader.Compile();
 }
 
 void initResources()
 {
-	engine::CSimpleFileLoader Loader("../data/terrain.png");
-	auto Result = Image.Load(Loader);
-	if (Result != "")
-		_CrtDbgBreak();
+	try {
+		std::basic_ifstream<unsigned char> file ("../data/terrain.png", std::ios::binary);
+		if (!file)
+			throw std::runtime_error("File not open");
+
+		// I prefer the shorter version
+		image = engine::Image::Load(istreambuf_range<unsigned char>(file));
+		//image = engine::Image::Load(boost::make_iterator_range(std::istreambuf_iterator<unsigned char>(file),
+		//													   std::istreambuf_iterator<unsigned char>()));
+	}
+	catch (std::exception const& e) {
+		MessageBox(0, e.what(), "Texture loading failed", MB_OK | MB_ICONERROR);
+		BREAKPOINT();
+	}
 
 	const unsigned texUnitNum = 0;
-	Image.Bind(texUnitNum);
+	image.Bind(texUnitNum);
 	// pixels!
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	Shader->SetTex("Texture", texUnitNum);
+	shader->SetTex("Texture", texUnitNum);
 }
 
 void keyboard()
@@ -299,7 +308,7 @@ void keyboard()
 
 	if (keys[sf::Keyboard::R]) // remove
 	{
-		glm::mat4 RMatrix = engine::CCamera::CreateRotation(Camera.LookDir.x, Camera.LookDir.y, 0.f);
+		glm::mat4 RMatrix = engine::Camera::CreateRotation(Camera.LookDir.x, Camera.LookDir.y, 0.f);
 		glm::vec3 NormV (RMatrix[0].z, RMatrix[1].z, RMatrix[2].z);
 		NormV *= -1.f;
 		
@@ -315,7 +324,7 @@ void keyboard()
 	}
 	if (keys[sf::Keyboard::T]) // add
 	{
-		glm::mat4 RMatrix = engine::CCamera::CreateRotation(Camera.LookDir.x, Camera.LookDir.y, 0.f);
+		glm::mat4 RMatrix = engine::Camera::CreateRotation(Camera.LookDir.x, Camera.LookDir.y, 0.f);
 		glm::vec3 NormV (RMatrix[0].z, RMatrix[1].z, RMatrix[2].z);
 		NormV *= -1.f;
 		
@@ -400,7 +409,7 @@ int WINAPI WinMain (HINSTANCE hInstance,
 
 			Camera.CalculateView();	
 			glm::mat4 View = Camera.GetViewMat();
-			Shader->SetUniform("View", View);
+			shader->SetUniform("View", View);
 
 			w.draw();
 
