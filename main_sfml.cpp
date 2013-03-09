@@ -25,9 +25,6 @@ bool	fullscreen= true;	// Fullscreen Flag Set To Fullscreen Mode By Default
 
 const unsigned int ScreenXSize = 1280;
 const unsigned int ScreenYSize = 800;
-
-GLuint programId;
-GLuint shaderIds[4];
  
 //GL_, GL_TESS_CONTROL_SHADER, GL_TESS_EVALUATION_SHADER, GL_GEOMETRY_SHADER, or GL_FRAGMENT_SHADER.
 #define NL "\n"
@@ -54,7 +51,7 @@ void CheckForGLError()
 {
 	int Err = glGetError();
 	if (Err != 0)
-		_CrtDbgBreak();
+		BREAKPOINT();
 }
 
 #include <boost/range/istream_range.hpp>
