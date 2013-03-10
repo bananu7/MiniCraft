@@ -1,4 +1,8 @@
 #include <Config.h>
+#ifdef MINICRAFT_WINDOWS
+	#include <Windows.h>
+#endif
+
 #include <SFML/Window.hpp>
 
 #include <GL/glew.h>
@@ -358,6 +362,8 @@ int main()
 {
 	sf::Window window(sf::VideoMode(1280, 800), "Minicraft v0.2", 7, sf::ContextSettings(24, 0, 0, 4, 0));
 
+	window.setMouseCursorVisible(false);
+
 	glewInit();
 
 	init();
@@ -396,13 +402,15 @@ int main()
         if (active)
 		{
 			keyboard();
-			//POINT p;
-			//GetCursorPos(&p);
+			sf::Vector2i mouseP = sf::Mouse::getPosition();
 			//p.x -= 640;
 			//p.y -= 400;
-			//mouse(p.x/640.0, p.y/400.0);
-			//SetCursorPos(640, 400);
-			//ShowCursor(false);
+			sf::Vector2f mouseNormalized;
+			mouseNormalized.x = (mouseP.x - 640) / 640.f;
+			mouseNormalized.y = (mouseP.y - 400) / 400.f;
+
+			mouse(mouseNormalized.x, mouseNormalized.y);
+			sf::Mouse::setPosition(sf::Vector2i(640, 400));
 
 			// rendering
 			glClearColor(63.f/255, 215.f/255, 252.f/255, 1.f);
