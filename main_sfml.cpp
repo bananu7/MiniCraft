@@ -1,4 +1,4 @@
-#include <Windows.h>
+#include <Config.h>
 #include <SFML/Window.hpp>
 
 #include <GL/glew.h>
@@ -11,9 +11,8 @@
 #include <fstream>
 
 #include "Engine.h"
-#include <config.h>
 #include "CameraAdds.h"
-#include "image.h"
+#include <Image.h>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "World.h"
@@ -80,20 +79,20 @@ public:
 
 		string vert = 
 		"#version 400 core"
-		NL"precision mediump float;"
-		NL"layout(location = 0) in vec3 in_position;"
-		NL"uniform mat4 Projection, View;"
-		NL"void main() {"
-		NL"    gl_Position = Projection * View * vec4(in_position, 1.0);"
-		NL"}"NL;
+		NL "precision mediump float;"
+		NL "layout(location = 0) in vec3 in_position;"
+		NL "uniform mat4 Projection, View;"
+		NL "void main() {"
+		NL "    gl_Position = Projection * View * vec4(in_position, 1.0);"
+		NL "}" NL;
 
 		string frag = 
 		"#version 400 core"
-		NL"precision mediump float;"
-		NL"out vec4 out_Color;"
-		NL"void main () {"
-		NL"    out_Color = vec4(1.0, 0.0, 0.0, 1.0);"
-		NL"}"NL;
+		NL "precision mediump float;"
+		NL "out vec4 out_Color;"
+		NL "void main () {"
+		NL "    out_Color = vec4(1.0, 0.0, 0.0, 1.0);"
+		NL "}" NL;
 
 		typedef unsigned char uc;
 
@@ -131,7 +130,7 @@ public:
 		}
 		catch (std::exception const& e)
 		{
-			MessageBox(0, e.what(), "Program link error", MB_OK | MB_ICONERROR);
+			//MessageBox(0, e.what(), "Program link error", MB_OK | MB_ICONERROR);
 			BREAKPOINT();
 		}
 		
@@ -248,7 +247,7 @@ void initShadersEngine()
 		CheckForGLError();
 	}
 	catch (std::exception const& e) {
-		MessageBox(0, e.what(), "Exception", MB_OK | MB_ICONERROR);
+		//MessageBox(0, e.what(), "Exception", MB_OK | MB_ICONERROR);
 		BREAKPOINT();
 	}
 
@@ -269,7 +268,7 @@ void initResources()
 		//													   std::istreambuf_iterator<unsigned char>()));
 	}
 	catch (std::exception const& e) {
-		MessageBox(0, e.what(), "Texture loading failed", MB_OK | MB_ICONERROR);
+		//MessageBox(0, e.what(), "Texture loading failed", MB_OK | MB_ICONERROR);
 		BREAKPOINT();
 	}
 
@@ -347,10 +346,15 @@ void mouse(double dmx, double dmy)
 	Camera.LookDir.x += dmy * 50.0;
 }
 
+
+#ifdef MINICRAFT_WINDOWS
 int WINAPI WinMain (HINSTANCE hInstance,
 					HINSTANCE hPrevInstance,
 					LPSTR lpCmdLine,
 					int iCmdShow)
+#else
+int main()
+#endif
 {
 	sf::Window window(sf::VideoMode(1280, 800), "Minicraft v0.2", 7, sf::ContextSettings(24, 0, 0, 4, 0));
 
@@ -392,13 +396,13 @@ int WINAPI WinMain (HINSTANCE hInstance,
         if (active)
 		{
 			keyboard();
-			POINT p;
-			GetCursorPos(&p);
-			p.x -= 640;
-			p.y -= 400;
-			mouse(p.x/640.0, p.y/400.0);
-			SetCursorPos(640, 400);
-			ShowCursor(false);
+			//POINT p;
+			//GetCursorPos(&p);
+			//p.x -= 640;
+			//p.y -= 400;
+			//mouse(p.x/640.0, p.y/400.0);
+			//SetCursorPos(640, 400);
+			//ShowCursor(false);
 
 			// rendering
 			glClearColor(63.f/255, 215.f/255, 252.f/255, 1.f);

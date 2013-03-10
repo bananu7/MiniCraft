@@ -1,8 +1,9 @@
 #include "World.h"
-#include "shader.h"
+#include "Shader.h"
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <Config.h>
 
 glm::vec2 calculateTilePosition (unsigned number)
 {
@@ -154,7 +155,7 @@ void World::draw()
 {
 	GLenum e = glGetError();
 	if (e != GL_NO_ERROR)
-		_CrtDbgBreak();
+		BREAKPOINT();
 
 	vao.Bind();
 	shader->Bind();
