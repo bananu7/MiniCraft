@@ -2,15 +2,26 @@
 #include <array>
 class Minefield
 {
-	static const unsigned size = 50;
-	typedef unsigned TBlockType;
-	std::array<TBlockType, size*size*size> data;
+
+public:
+	struct BlockType {
+		unsigned value;
+		// TEMP - only the facing direction
+		unsigned char orientation;
+
+		BlockType(unsigned _value = 0, unsigned char _orientation = 0) 
+			: value(_value), orientation(_orientation) { }
+	};
+
+private:
+	static const unsigned size = 30;
+	std::array<BlockType, size*size*size> data;
 
 public:
 	unsigned getSize () const { return size; }
 
-	TBlockType get(int x, int y, int z);
-	void set(int x, int y, int z, TBlockType value);
+	BlockType get(int x, int y, int z);
+	void set(int x, int y, int z, unsigned value);
 
 	Minefield();
 };

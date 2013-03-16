@@ -14,9 +14,7 @@ class World
 	// rendering
 	std::shared_ptr<engine::Program> shader;
 	engine::VertexAttributeArray vao;
-	engine::VertexBuffer vertexVbo;
-	engine::VertexBuffer instanceTranslationsVbo, instanceTexcoordsVbo;
-	engine::VertexBuffer instanceLightingVbo;
+	engine::VertexBuffer positionVbo, texcoordVbo;
 
 	unsigned visibleCubesCount;
 

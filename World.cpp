@@ -5,31 +5,64 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <Config.h>
 
-glm::vec2 calculateTilePosition (unsigned number)
+
+glm::vec2 offset (unsigned value) {
+	return glm::vec2 (((value-1) % 16) / 16.0, ((value-1) / 16) / 16.0);
+}
+
+glm::vec2 calculateTexCoords (Minefield::BlockType block, unsigned wall)
 {
-	return glm::vec2 ((number % 16) / 16.0, (number / 16) / 16.0);
+	// if block is oriented, we have to set different value to the top.
+	if (block.value == 3)
+		if (wall == 4) // top
+			return offset(1);
+		else if (wall == 5)
+			return offset(3);
+		else 
+			return offset(4);
+	else
+		return offset(block.value);
 }
 
 void World::init()
 {
  	// create
 	vao.Bind();
-	vertexVbo.Bind();
-	instanceTranslationsVbo.Bind();
-	instanceTexcoordsVbo.Bind();
- 
+	//vertex-data position
+	positionVbo.Bind();
+	glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+
+	//vertex-data texcoords
+	texcoordVbo.Bind();
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
+}
+
+void World::recalcInstances()
+{
 	// specify data
-	const float Verts[] = { 
-		0.f, 0.f, 0.f,
-		0.f, 0.f, 1.f,
-		0.f, 1.f, 0.f,
-		0.f, 1.f, 1.f,
-		1.f, 0.f, 0.f,
-		1.f, 0.f, 1.f,
-		1.f, 1.f, 0.f,
-		1.f, 1.f, 1.f,
-    };
 	
+	static const std::array<glm::vec3, 8> Verts = {
+		glm::vec3(0.f, 0.f, 0.f),
+		glm::vec3(0.f, 0.f, 1.f),
+		glm::vec3(0.f, 1.f, 0.f),
+		glm::vec3(0.f, 1.f, 1.f),
+		glm::vec3(1.f, 0.f, 0.f),
+		glm::vec3(1.f, 0.f, 1.f),
+		glm::vec3(1.f, 1.f, 0.f),
+		glm::vec3(1.f, 1.f, 1.f),
+	};
+
+	static const std::array<glm::vec2, 6> TexCoords = {
+		glm::vec2(1.f, 0.f),
+		glm::vec2(0.f, 0.f),
+		glm::vec2(0.f, 1.f),
+		glm::vec2(1.f, 0.f),
+		glm::vec2(0.f, 1.f),
+		glm::vec2(1.f, 1.f),
+	};
+
 	/*
 
 	   2------6
@@ -42,69 +75,18 @@ void World::init()
 
 	*/
 
-	#define vert(n) Verts[(n)*3],Verts[(n)*3+1],Verts[(n)*3+2]
-	const float RotationlessCube[] = {
-		// front
-		vert(7), 1.f, 0.f, vert(3), 0.f, 0.f, vert(1), 0.f, 1.f,
-		vert(7), 1.f, 0.f, vert(1), 0.f, 1.f, vert(5), 1.f, 1.f,
-
-		// right
-		vert(6), 1.f, 0.f, vert(7), 0.f, 0.f, vert(5), 0.f, 1.f,
-		vert(6), 1.f, 0.f, vert(5), 0.f, 1.f, vert(4), 1.f, 1.f,
-
-		// back
-		vert(2), 1.f, 0.f, vert(6), 0.f, 0.f, vert(4), 0.f, 1.f,
-		vert(2), 1.f, 0.f, vert(4), 0.f, 1.f, vert(0), 1.f, 1.f,
-
-		// left
-		vert(3), 1.f, 0.f, vert(2), 0.f, 0.f, vert(0), 0.f, 1.f,
-		vert(3), 1.f, 0.f, vert(0), 0.f, 1.f, vert(1), 1.f, 1.f,
-
-		// top
-		vert(6), 1.f, 0.f, vert(2), 0.f, 0.f, vert(3), 0.f, 1.f,
-		vert(6), 1.f, 0.f, vert(3), 0.f, 1.f, vert(7), 1.f, 1.f,
-
-		// bottom
-		vert(5), 1.f, 0.f, vert(1), 0.f, 0.f, vert(0), 0.f, 1.f,
-		vert(5), 1.f, 0.f, vert(0), 0.f, 1.f, vert(4), 1.f, 1.f,
+	static int Walls[] = {
+		7,3,1,    7,1,5, // front
+		6,7,5,    6,5,4, // right
+		2,6,4,    2,4,0, // back
+		3,2,0,    3,0,1, // left
+		6,2,3,    6,3,7, // top
+		5,1,0,    5,0,4  // bottom
 	};
-	#undef vert
 
-	// load data
-	vertexVbo.LoadData(RotationlessCube, sizeof(RotationlessCube));
-
-	// give meaning to data
-	vertexVbo.Bind();
-	glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (GLvoid*)(3 * sizeof(float)));
-
-	// Texture offset and model matrix attributes used for instancing
-	// we don't have to send the whole matrix; position will do
-	instanceTranslationsVbo.Bind();	
-	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glVertexAttribDivisor(2, 1);
-
-	instanceTexcoordsVbo.Bind();
-	// texture coordinates
-	glEnableVertexAttribArray(3);
-	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 0, 0);
-	glVertexAttribDivisor(3, 1);
-
-	instanceLightingVbo.Bind();
-	glEnableVertexAttribArray(4);
-	glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, 0, 0);
-	glVertexAttribDivisor(4, 1);
-}
-
-void World::recalcInstances()
-{
 	visibleCubesCount = 0;
-	std::vector<glm::vec3> Translations;
+	std::vector<glm::vec3> Positions;
 	std::vector<glm::vec2> Texcoords;
-	std::vector<float> Lighting;
 
 	const unsigned size = field.getSize();
 
@@ -113,7 +95,7 @@ void World::recalcInstances()
 			for (unsigned z = 0; z < size; ++z)
 			{
 				auto block = field.get(x,y,z);
-				if (block)
+				if (block.value)
 				{
 					bool CanSkip = false;
 					int numNeighs = 0;
@@ -122,12 +104,12 @@ void World::recalcInstances()
 					    y > 0 && y < size-1 &&
 					    z > 0 && z < size-1)
 					{
-						numNeighs += field.get(x-1, y, z) ? 1 : 0;
-						numNeighs += field.get(x, y-1, z) ? 1 : 0;
-						numNeighs += field.get(x, y, z-1) ? 1 : 0;
-						numNeighs += field.get(x+1, y, z) ? 1 : 0;
-						numNeighs += field.get(x, y+1, z) ? 1 : 0;
-						numNeighs += field.get(x, y, z+1) ? 1 : 0;
+						numNeighs += field.get(x-1, y, z).value ? 1 : 0;
+						numNeighs += field.get(x, y-1, z).value ? 1 : 0;
+						numNeighs += field.get(x, y, z-1).value ? 1 : 0;
+						numNeighs += field.get(x+1, y, z).value ? 1 : 0;
+						numNeighs += field.get(x, y+1, z).value ? 1 : 0;
+						numNeighs += field.get(x, y, z+1).value ? 1 : 0;
 
 						if (numNeighs == 6)
 							CanSkip = true;
@@ -135,20 +117,27 @@ void World::recalcInstances()
 
 					// Add frustum culling here?
 
+					// Generate output vertices into VBOs
 					if (!CanSkip)
 					{
-						Translations.push_back(glm::vec3(x, y, z));
-						Texcoords.push_back(calculateTilePosition(block - 1));
-						Lighting.push_back(1.f / numNeighs);
+						// 6 walls
+						for (unsigned wall = 0; wall < 6; ++wall) {
+							// Each wall has two triangles
+							for (int t = 0; t < 6; ++t) {
 
+								unsigned vert_num = Walls[t + wall * 6];
+								Positions.push_back(Verts[vert_num] + glm::vec3(x,y,z));
+
+								Texcoords.push_back(TexCoords[t]/16.f + calculateTexCoords(block, wall));
+							}
+						}
+					
 						++visibleCubesCount;
 					}
 				}
 			}
-
-	instanceTranslationsVbo.LoadData(Translations.data(), sizeof(glm::vec3) * Translations.size());
-	instanceTexcoordsVbo.LoadData(Texcoords.data(), sizeof(glm::vec2) * Texcoords.size());
-	instanceLightingVbo.LoadData(Lighting.data(), sizeof(float) * Lighting.size());
+	positionVbo.LoadData(Positions.data(), Positions.size() * sizeof(glm::vec3));
+	texcoordVbo.LoadData(Texcoords.data(), Texcoords.size() * sizeof(glm::vec2));
 }
 
 void World::draw()
@@ -162,19 +151,13 @@ void World::draw()
 
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
-	glEnableVertexAttribArray(2);
-	glEnableVertexAttribArray(3);
-	glEnableVertexAttribArray(4);
 
-	//	glDrawArrays(GL_TRIANGLES, 0, visibleCubesCount * 36);
+	glDrawArrays(GL_TRIANGLES, 0, visibleCubesCount * 36);
 	//glDrawArraysInstancedBaseInstance(GL_TRIANGLES, 0, 36, visibleCubesCount, 0);
-	glDrawArraysInstanced(GL_TRIANGLES, 0, 36, visibleCubesCount);
+	//glDrawArraysInstanced(GL_TRIANGLES, 0, 36, visibleCubesCount);
 
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);
-	glDisableVertexAttribArray(2);
-	glDisableVertexAttribArray(3);
-	glDisableVertexAttribArray(4);
 }
 
 #include <fstream>
@@ -316,10 +299,10 @@ std::vector<World::CubePos> World::raycast(glm::vec3 const& pos, glm::vec3 const
 		Log << "Current position : " << x << ", " << y << ", " << z << '\n';
 
 		auto currentVal = field.get(current_x, current_y, current_z);
-		if ((currentVal != 0) || (raycastParams & INCLUDE_EMPTY))
+		if ((currentVal.value != 0) || (raycastParams & INCLUDE_EMPTY))
 		{
 			Results.push_back(World::CubePos(current_x, current_y, current_z));
-			if ((raycastParams & STOP_ON_FIRST) && (currentVal != 0))
+			if ((raycastParams & STOP_ON_FIRST) && (currentVal.value != 0))
 				break;
 		}
 		Log << "------- end of pass ---------\n";
@@ -331,10 +314,9 @@ std::vector<World::CubePos> World::raycast(glm::vec3 const& pos, glm::vec3 const
 
 World::World(std::shared_ptr<engine::Program> _shader) :
 	shader(std::move(_shader)),
-	vertexVbo(engine::VertexBuffer::DATA_BUFFER, engine::VertexBuffer::STATIC_DRAW),
-	instanceTexcoordsVbo(engine::VertexBuffer::DATA_BUFFER, engine::VertexBuffer::STATIC_DRAW),
-	instanceTranslationsVbo(engine::VertexBuffer::DATA_BUFFER, engine::VertexBuffer::STATIC_DRAW)
+	positionVbo(engine::VertexBuffer::DATA_BUFFER, engine::VertexBuffer::STATIC_DRAW),
+	texcoordVbo(engine::VertexBuffer::DATA_BUFFER, engine::VertexBuffer::STATIC_DRAW)
 {
-	field.set(1,2,2, 2);
+
 }
 

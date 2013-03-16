@@ -3,26 +3,26 @@
 #include <random>
 #include <cmath>
 
-Minefield::TBlockType Minefield::get(int x, int y, int z) {
+Minefield::BlockType Minefield::get(int x, int y, int z) {
 	if (x >= 0 && y >= 0 && z >= 0)
 	{
 		if (x < size && y < size && z < size)
 			return data[x * size * size + y * size + z];
 		else
-			return 0;
+			return BlockType();
 	}
 	else
 	{
 //		_CrtDbgBreak();
-		return 0;
+		return BlockType();
 	}
 }
-void Minefield::set(int x, int y, int z, Minefield::TBlockType value) {
+void Minefield::set(int x, int y, int z, unsigned value) {
 	if (x >= 0 && y >= 0 && z >= 0)
 	{
 		if (x < size && y < size && z < size)
 		{
-			data[x * size * size + y * size + z] = value;
+			data[x * size * size + y * size + z].value = value;
 		}
 	}
 	//else
@@ -30,8 +30,10 @@ void Minefield::set(int x, int y, int z, Minefield::TBlockType value) {
 }
 
 Minefield::Minefield() {
-	for (auto & i : data)
-		i = 0;
+	for (auto & i : data) {
+		i.value = 0;
+		i.orientation = 0;
+	}
 
 	std::random_device rd;
 
@@ -67,12 +69,12 @@ Minefield::Minefield() {
 			for (int i = 0; i < h; ++i) {
 				int block = 1;
 
-				if (i < 10)
+				if (i < 0.2*size)
 					block = 19;
-				else if (i < 15)
+				else if (i < 0.3*size)
 					block = 1;
-				else if (i < 20)
-					block = 4;
+				else if (i < 0.4*size)
+					block = 3;
 				else
 					block = 2;
 
