@@ -1,11 +1,9 @@
-#include <Config.h>
-#ifdef MINICRAFT_WINDOWS
-	#include <Windows.h>
-#endif
+
 
 #include <SFML/Window.hpp>
-
+#include <glm/gtc/matrix_transform.hpp>
 #include <GL/glew.h>
+
 #include <string>
 #include <iostream>
 #include <array>
@@ -14,29 +12,32 @@
 #include <istream>
 #include <fstream>
 
-#include "Engine.h"
-#include "CameraAdds.h"
+#include <Engine.h>
+#include <CameraAdds.h>
 #include <Image.h>
-#include <glm/gtc/matrix_transform.hpp>
+#include <Config.h>
 
 #include "World.h"
+#include "Line.hpp"
+#include "FullscreenQuad.hpp"
+
+#ifdef MINICRAFT_WINDOWS
+	#include <Windows.h>
+#endif
 
 
 bool	keys[256];			// Array Used For The Keyboard Routine
 bool	active = true;		// Window Active Flag Set To TRUE By Default
 bool	fullscreen= true;	// Fullscreen Flag Set To Fullscreen Mode By Default
 
-const unsigned int ScreenXSize = 1280;
-const unsigned int ScreenYSize = 800;
- 
-//GL_, GL_TESS_CONTROL_SHADER, GL_TESS_EVALUATION_SHADER, GL_GEOMETRY_SHADER, or GL_FRAGMENT_SHADER.
+const int ScreenXSize = 1280;
+const int ScreenYSize = 800;
+
 #define NL "\n"
  
 using std::vector;
 using std::string;
 using std::unique_ptr;
-
-template<class T> T& as_lvalue(T&& v){ return v; }
 
 glm::mat4 Projection, View;
 
@@ -68,100 +69,6 @@ template<class Elem> inline
                 std::istreambuf_iterator<Elem>(in),
                 std::istreambuf_iterator<Elem>());
         }
-
-class Line {
-	engine::VertexBuffer vbo;
-	engine::VertexAttributeArray vao;
-	engine::Program program;
-
-public:
-	Line() : vbo(engine::VertexBuffer::DATA_BUFFER, engine::VertexBuffer::STATIC_DRAW)
-	{
-		CheckForGLError();
-
-		vao.Bind();
-
-		string vert = 
-		"#version 400 core"
-		NL "precision mediump float;"
-		NL "layout(location = 0) in vec3 in_position;"
-		NL "uniform mat4 Projection, View;"
-		NL "void main() {"
-		NL "    gl_Position = Projection * View * vec4(in_position, 1.0);"
-		NL "}" NL;
-
-		string frag = 
-		"#version 400 core"
-		NL "precision mediump float;"
-		NL "out vec4 out_Color;"
-		NL "void main () {"
-		NL "    out_Color = vec4(1.0, 0.0, 0.0, 1.0);"
-		NL "}" NL;
-
-		typedef unsigned char uc;
-
-		{
-			auto vs = std::make_shared<engine::VertexShader>(vert);
-			vs->Compile();
-			auto s = vs->Status();
-			if (!s.empty())
-				BREAKPOINT();
-			program.AttachShader(vs);
-			CheckForGLError();
-		}
-		{
-			auto fs = std::make_shared<engine::FragmentShader>(frag);
-			fs->Compile();
-			auto s = fs->Status();
-			if (!s.empty())
-				BREAKPOINT();
-			program.AttachShader(fs);
-			CheckForGLError();
-		}
-		
-		auto status = program.Link();
-		program.Bind();
-
-		CheckForGLError();
-
-		try {
-			if (!status.empty())
-				throw std::runtime_error(status);
-			CheckForGLError();
-			if (!program)
-				throw std::runtime_error("Program not valid");
-			CheckForGLError();
-		}
-		catch (std::exception const& e)
-		{
-			//MessageBox(0, e.what(), "Program link error", MB_OK | MB_ICONERROR);
-			BREAKPOINT();
-		}
-		
-	}
-
-	void set (glm::vec3 const& start, glm::vec3 const& end)
-	{
-		vao.Bind();
-		std::array<glm::vec3, 2> a;
-		a[0] = start;
-		a[1] = end;
-		vbo.LoadData(a.data(), sizeof(glm::vec3) * 2);
-		vbo.Bind();
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	}
-	void draw (glm::mat4 const& projection, glm::mat4 const& view)
-	{
-		vao.Bind();
-		vbo.Bind();
-		program.SetUniform("Projection", projection);
-		program.SetUniform("View", view);
-		program.Bind();
-		glEnableVertexAttribArray(0);
-		glDrawArrays(GL_LINES, 0, 2);
-		glDisableVertexAttribArray(0);
-	}
-};
 
 Line* g_L;
 bool g_Run = true;
@@ -215,7 +122,8 @@ void initShadersEngine()
 		 // NL"    out_Color = vec4((out_position.xyz + 1)/2, 1.0);"
 		//  NL"    out_Color = vec4(out_texCoord, 0.0, 1.0);"
 		  NL"    vec2 tc = var_texCoord;"
-		  NL"    out_Color = vec4(texture(Texture, tc).rgb * var_lightIntensity, 1.0);"
+		//NL"    out_Color = vec4(texture(Texture, tc).rgb * var_lightIntensity, 1.0);"
+		  NL"    out_Color = vec4(texture(Texture, tc).rgb, 1.0);"
           NL"}";
 
 	typedef unsigned char uc;
@@ -224,9 +132,8 @@ void initShadersEngine()
 		{
 			auto vs = std::make_shared<engine::VertexShader>(vert);
 			vs->Compile();
-			auto s = vs->Status();
-			if (!s.empty())
-				BREAKPOINT();
+			if (!vs)
+				throw (vs->Status());
 			shader->AttachShader(vs);
 		}
 		CheckForGLError();
@@ -234,9 +141,8 @@ void initShadersEngine()
 		{
 			auto fs = std::make_shared<engine::FragmentShader>(frag);
 			fs->Compile();
-			auto s = fs->Status();
-			if (!s.empty())
-				BREAKPOINT();
+			if (!fs)
+				throw (fs->Status());
 			shader->AttachShader(fs);
 		}
 		CheckForGLError();
@@ -360,7 +266,7 @@ int WINAPI WinMain (HINSTANCE hInstance,
 int main()
 #endif
 {
-	sf::Window window(sf::VideoMode(1280, 800), "Minicraft v0.2", 7, sf::ContextSettings(24, 0, 0, 4, 0));
+	sf::Window window(sf::VideoMode(ScreenXSize, ScreenYSize), "Minicraft v0.2", 7, sf::ContextSettings(24, 0, 0, 4, 0));
 
 	window.setMouseCursorVisible(false);
 
@@ -377,6 +283,8 @@ int main()
 	L[0].set(glm::vec3(0, -0.05f, 0.f), glm::vec3(0, 0.05f, 0.f));
 	L[1].set(glm::vec3(-0.05f, 0.f, 0.f), glm::vec3(0.05f, 0.f, 0.f));
 	L[2].set(glm::vec3(-0.05f, 0.f, 0.f), glm::vec3(0.05f, 0.f, 0.f));
+
+	FullscreenQuad fq;
 
 	while (window.isOpen())
     {
@@ -403,14 +311,13 @@ int main()
 		{
 			keyboard();
 			sf::Vector2i mouseP = sf::Mouse::getPosition();
-			//p.x -= 640;
-			//p.y -= 400;
 			sf::Vector2f mouseNormalized;
-			mouseNormalized.x = (mouseP.x - 640) / 640.f;
-			mouseNormalized.y = (mouseP.y - 400) / 400.f;
+
+			mouseNormalized.x = (mouseP.x - ScreenXSize/2) / (float)(ScreenXSize/2);
+			mouseNormalized.y = (mouseP.y - ScreenYSize/2) / (float)(ScreenYSize/2);
 
 			mouse(mouseNormalized.x, mouseNormalized.y);
-			sf::Mouse::setPosition(sf::Vector2i(640, 400));
+			sf::Mouse::setPosition(sf::Vector2i(ScreenXSize/2, ScreenYSize/2));
 
 			// rendering
 			glClearColor(63.f/255, 215.f/255, 252.f/255, 1.f);
@@ -425,6 +332,8 @@ int main()
 			L[0].draw(glm::mat4(1.0), glm::mat4(1.0));
 			L[1].draw(glm::mat4(1.0), glm::mat4(1.0));
 			L[2].draw(Projection, View);
+
+//			fq.draw();
 		}
 		
 

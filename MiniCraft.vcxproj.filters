@@ -24,12 +24,24 @@
     <ClCompile Include="main_sfml.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="simplex.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Minefield.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="World.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="simplex.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Line.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FullscreenQuad.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

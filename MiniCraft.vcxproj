@@ -94,10 +94,14 @@
   <ItemGroup>
     <ClCompile Include="main_sfml.cpp" />
     <ClCompile Include="Minefield.cpp" />
+    <ClCompile Include="simplex.cpp" />
     <ClCompile Include="World.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="FullscreenQuad.hpp" />
+    <ClInclude Include="Line.hpp" />
     <ClInclude Include="Minefield.h" />
+    <ClInclude Include="simplex.h" />
     <ClInclude Include="World.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
