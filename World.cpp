@@ -88,54 +88,58 @@ void World::recalcInstances()
 	std::vector<glm::vec3> Positions;
 	std::vector<glm::vec2> Texcoords;
 
-	const unsigned size = field.getSize();
+	const int chunkSize = field.getSize();
 
-	for (unsigned x = 0; x < size; ++x)
-		for (unsigned y = 0; y < size; ++y)
-			for (unsigned z = 0; z < size; ++z)
-			{
-				auto block = field.get(x,y,z);
-				if (block.value)
+	for (auto const& chunk : field.getChunks()) {
+		glm::vec3 chunkOffset (chunk.first.x * chunkSize, chunk.first.y * chunkSize, chunk.first.z * chunkSize);
+
+		for (unsigned x = 0; x < chunkSize; ++x)
+			for (unsigned y = 0; y < chunkSize; ++y)
+				for (unsigned z = 0; z < chunkSize; ++z)
 				{
-					bool CanSkip = false;
-					int numNeighs = 0;
-
-					if (x > 0 && x < size-1 &&
-					    y > 0 && y < size-1 &&
-					    z > 0 && z < size-1)
+					auto block = chunk.second.access(x,y,z);
+					if (block.value)
 					{
-						numNeighs += field.get(x-1, y, z).value ? 1 : 0;
-						numNeighs += field.get(x, y-1, z).value ? 1 : 0;
-						numNeighs += field.get(x, y, z-1).value ? 1 : 0;
-						numNeighs += field.get(x+1, y, z).value ? 1 : 0;
-						numNeighs += field.get(x, y+1, z).value ? 1 : 0;
-						numNeighs += field.get(x, y, z+1).value ? 1 : 0;
+						bool CanSkip = false;
+						int numNeighs = 0;
 
-						if (numNeighs == 6)
-							CanSkip = true;
-					}
+						if (x > 0 && x < chunkSize-1 &&
+							y > 0 && y < chunkSize-1 &&
+							z > 0 && z < chunkSize-1)
+						{
+							numNeighs += field.get(x-1, y, z).value ? 1 : 0;
+							numNeighs += field.get(x, y-1, z).value ? 1 : 0;
+							numNeighs += field.get(x, y, z-1).value ? 1 : 0;
+							numNeighs += field.get(x+1, y, z).value ? 1 : 0;
+							numNeighs += field.get(x, y+1, z).value ? 1 : 0;
+							numNeighs += field.get(x, y, z+1).value ? 1 : 0;
 
-					// Add frustum culling here?
-
-					// Generate output vertices into VBOs
-					if (!CanSkip)
-					{
-						// 6 walls
-						for (unsigned wall = 0; wall < 6; ++wall) {
-							// Each wall has two triangles
-							for (int t = 0; t < 6; ++t) {
-
-								unsigned vert_num = Walls[t + wall * 6];
-								Positions.push_back(Verts[vert_num] + glm::vec3(x,y,z));
-
-								Texcoords.push_back(TexCoords[t]/16.f + calculateTexCoords(block, wall));
-							}
+							if (numNeighs == 6)
+								CanSkip = true;
 						}
+
+						// Add frustum culling here?
+
+						// Generate output vertices into VBOs
+						if (!CanSkip)
+						{
+							// 6 walls
+							for (unsigned wall = 0; wall < 6; ++wall) {
+								// Each wall has two triangles
+								for (int t = 0; t < 6; ++t) {
+
+									unsigned vert_num = Walls[t + wall * 6];
+									Positions.push_back(Verts[vert_num] + glm::vec3(x,y,z) + chunkOffset);
+
+									Texcoords.push_back(TexCoords[t]/16.f + calculateTexCoords(block, wall));
+								}
+							}
 					
-						++visibleCubesCount;
+							++visibleCubesCount;
+						}
 					}
 				}
-			}
+	}
 	positionVbo.LoadData(Positions.data(), Positions.size() * sizeof(glm::vec3));
 	texcoordVbo.LoadData(Texcoords.data(), Texcoords.size() * sizeof(glm::vec2));
 }

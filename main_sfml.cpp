@@ -292,6 +292,11 @@ int main()
 
 			if (event.type == sf::Event::KeyReleased)
 				keys[event.key.code] = false;
+
+			if (event.type == sf::Event::GainedFocus)
+				active = true;
+			if (event.type == sf::Event::LostFocus)
+				active = false;
         }
 
 		if (!g_Run)
