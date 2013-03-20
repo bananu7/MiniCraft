@@ -82,6 +82,7 @@ public:
 		a[1] = end;
 		vbo.LoadData(a.data(), sizeof(glm::vec3) * 2);
 		vbo.Bind();
+		glEnableVertexAttribArray(0);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	}
 	void draw (glm::mat4 const& projection, glm::mat4 const& view)
@@ -91,8 +92,7 @@ public:
 		program.SetUniform("Projection", projection);
 		program.SetUniform("View", view);
 		program.Bind();
-		glEnableVertexAttribArray(0);
+		
 		glDrawArrays(GL_LINES, 0, 2);
-		glDisableVertexAttribArray(0);
 	}
 };

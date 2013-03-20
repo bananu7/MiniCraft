@@ -153,15 +153,9 @@ void World::draw()
 	vao.Bind();
 	shader->Bind();
 
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-
 	glDrawArrays(GL_TRIANGLES, 0, visibleCubesCount * 36);
 	//glDrawArraysInstancedBaseInstance(GL_TRIANGLES, 0, 36, visibleCubesCount, 0);
 	//glDrawArraysInstanced(GL_TRIANGLES, 0, 36, visibleCubesCount);
-
-	glDisableVertexAttribArray(0);
-	glDisableVertexAttribArray(1);
 }
 
 #include <fstream>

@@ -41,7 +41,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\PROJECTS\Engine\Engine\include;C:\DEV\freeglut\include;C:\PROJECTS\Engine\dependencies\glm-0.9.4.1;C:\PROJECTS\Engine\dependencies\SFML-2.0\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\PROJECTS\Engine\Engine\include;C:\DEV\freeglut\include;C:\PROJECTS\Engine\dependencies\glm-0.9.4.1;C:\PROJECTS\Engine\dependencies\pugixml-1.2\src;C:\PROJECTS\Engine\dependencies\SFML-2.0\include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\DEV\freeglut\lib;C:\PROJECTS\Engine\Debug;$(LibraryPath)</LibraryPath>
     <IntDir>$(Configuration)\intermediate\</IntDir>
   </PropertyGroup>
@@ -98,7 +98,9 @@
     <ClCompile Include="World.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Font.hpp" />
     <ClInclude Include="FullscreenQuad.hpp" />
+    <ClInclude Include="helpers.hpp" />
     <ClInclude Include="Line.hpp" />
     <ClInclude Include="Minefield.h" />
     <ClInclude Include="simplex.h" />

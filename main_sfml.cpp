@@ -21,6 +21,8 @@
 #include "World.h"
 #include "Line.hpp"
 #include "FullscreenQuad.hpp"
+#include "Font.hpp"
+#include "helpers.hpp"
 
 #ifdef MINICRAFT_WINDOWS
 	#include <Windows.h>
@@ -58,18 +60,6 @@ void CheckForGLError()
 	if (Err != 0)
 		BREAKPOINT();
 }
-
-#include <boost/range/istream_range.hpp>
-// istreambuf version of boost::istream_range; required for binary data
-//FIXME traits support and possibly char<->uchar
-template<class Elem> inline
-        boost::iterator_range<std::istreambuf_iterator<Elem> >
-        istreambuf_range(std::basic_istream<Elem>& in)
-        {
-            return boost::iterator_range<std::istreambuf_iterator<Elem> >(
-                std::istreambuf_iterator<Elem>(in),
-                std::istreambuf_iterator<Elem>());
-        }
 
 Line* g_L;
 bool g_Run = true;
@@ -278,6 +268,8 @@ int main()
 	L[1].set(glm::vec3(-0.05f, 0.f, 0.f), glm::vec3(0.05f, 0.f, 0.f));
 	L[2].set(glm::vec3(-0.05f, 0.f, 0.f), glm::vec3(0.05f, 0.f, 0.f));
 
+	Font font;
+
 	FullscreenQuad fq;
 	GLuint mainTexture, depthTexture;
 	glGenTextures(1, &mainTexture);
@@ -361,6 +353,11 @@ int main()
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, mainTexture);
 			fq.draw();
+
+			glDisable(GL_DEPTH_TEST);
+			font.draw("ABCDEFGHIJKLMNOPQRSTUVWXYZ", glm::vec2(20.f, 20.f));
+			font.draw("abcdefghijklmnopqrstuvwxyz", glm::vec2(20.f, 50.f));
+			font.draw("1234567890!@#$%^&*()-=_+[]{};':\",./<>?", glm::vec2(20.f, 80.f));
 		}
 		
 
