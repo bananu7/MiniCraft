@@ -16,6 +16,7 @@
 #include <CameraAdds.h>
 #include <Image.h>
 #include <Config.h>
+#include <FrameBuffer.h>
 
 #include "World.h"
 #include "Line.hpp"
@@ -278,6 +279,25 @@ int main()
 	L[2].set(glm::vec3(-0.05f, 0.f, 0.f), glm::vec3(0.05f, 0.f, 0.f));
 
 	FullscreenQuad fq;
+	GLuint mainTexture, depthTexture;
+	glGenTextures(1, &mainTexture);
+	glGenTextures(1, &depthTexture);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, mainTexture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ScreenXSize, ScreenYSize, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+
+	glBindTexture(GL_TEXTURE_2D, depthTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, ScreenXSize, ScreenYSize, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	engine::Framebuffer mainFbo;
+	mainFbo.AttachTexture(GL_TEXTURE_2D, mainTexture);
+	mainFbo.AttachTexture(GL_TEXTURE_2D, depthTexture, GL_DEPTH_ATTACHMENT);
+	if (!mainFbo.IsValid())
+		BREAKPOINT();
 
 	while (window.isOpen())
     {
@@ -318,6 +338,9 @@ int main()
 			sf::Mouse::setPosition(sf::Vector2i(ScreenXSize/2, ScreenYSize/2));
 
 			// rendering
+			
+			mainFbo.Bind();
+
 			glClearColor(63.f/255, 215.f/255, 252.f/255, 1.f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -325,13 +348,19 @@ int main()
 			glm::mat4 View = Camera.GetViewMat();
 			shader->SetUniform("View", View);
 
+			image.Bind(0);
+			glEnable(GL_DEPTH_TEST);
 			w.draw();
 
 			L[0].draw(glm::mat4(1.0), glm::mat4(1.0));
 			L[1].draw(glm::mat4(1.0), glm::mat4(1.0));
 			L[2].draw(Projection, View);
 
-//			fq.draw();
+			engine::Framebuffer::Disable();
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, mainTexture);
+			fq.draw();
 		}
 		
 

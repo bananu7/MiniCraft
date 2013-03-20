@@ -93,9 +93,9 @@ void World::recalcInstances()
 	for (auto const& chunk : field.getChunks()) {
 		glm::vec3 chunkOffset (chunk.first.x * chunkSize, chunk.first.y * chunkSize, chunk.first.z * chunkSize);
 
-		for (unsigned x = 0; x < chunkSize; ++x)
-			for (unsigned y = 0; y < chunkSize; ++y)
-				for (unsigned z = 0; z < chunkSize; ++z)
+		for (int x = 0; x < chunkSize; ++x)
+			for (int y = 0; y < chunkSize; ++y)
+				for (int z = 0; z < chunkSize; ++z)
 				{
 					auto block = chunk.second.access(x,y,z);
 					if (block.value)
