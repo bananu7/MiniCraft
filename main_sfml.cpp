@@ -22,6 +22,7 @@
 #include "Line.hpp"
 #include "FullscreenQuad.hpp"
 #include "Font.hpp"
+#include "Texture.hpp"
 #include "helpers.hpp"
 
 #ifdef MINICRAFT_WINDOWS
@@ -271,23 +272,22 @@ int main()
 	Font font;
 
 	FullscreenQuad fq;
-	GLuint mainTexture, depthTexture;
-	glGenTextures(1, &mainTexture);
-	glGenTextures(1, &depthTexture);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, mainTexture);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ScreenXSize, ScreenYSize, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 
-	glBindTexture(GL_TEXTURE_2D, depthTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, ScreenXSize, ScreenYSize, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	Texture<TextureType::Texture_2D> mainTexture;
+	mainTexture.bind(0);
+	mainTexture.setFiltering(FilteringDirection::Minification, FilteringMode::Nearest);
+	mainTexture.setFiltering(FilteringDirection::Magnification, FilteringMode::Nearest);
+	mainTexture.imageData(ScreenXSize, ScreenYSize, TextureFormat::RGBA, TextureFormat::RGBA, TextureDataType::UnsignedByte, nullptr);
+
+	Texture<TextureType::Texture_2D> depthTexture;
+	depthTexture.bind();
+	depthTexture.setFiltering(FilteringDirection::Minification, FilteringMode::Nearest);
+	depthTexture.setFiltering(FilteringDirection::Magnification, FilteringMode::Nearest);
+	depthTexture.imageData(ScreenXSize, ScreenYSize, TextureFormat::Depth, TextureFormat::Depth, TextureDataType::Float, nullptr);
 
 	engine::Framebuffer mainFbo;
-	mainFbo.AttachTexture(GL_TEXTURE_2D, mainTexture);
-	mainFbo.AttachTexture(GL_TEXTURE_2D, depthTexture, GL_DEPTH_ATTACHMENT);
+	mainFbo.AttachTexture(GL_TEXTURE_2D, mainTexture.getId());
+	mainFbo.AttachTexture(GL_TEXTURE_2D, depthTexture.getId(), GL_DEPTH_ATTACHMENT);
 	if (!mainFbo.IsValid())
 		BREAKPOINT();
 
@@ -330,7 +330,7 @@ int main()
 			sf::Mouse::setPosition(sf::Vector2i(ScreenXSize/2, ScreenYSize/2));
 
 			// rendering
-			
+			glBindTexture(GL_TEXTURE_2D, 0);
 			mainFbo.Bind();
 
 			glClearColor(63.f/255, 215.f/255, 252.f/255, 1.f);
@@ -349,9 +349,8 @@ int main()
 			L[2].draw(Projection, View);
 
 			engine::Framebuffer::Disable();
+			mainTexture.bind(0);
 
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, mainTexture);
 			fq.draw();
 
 			glDisable(GL_DEPTH_TEST);

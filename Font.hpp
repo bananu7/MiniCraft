@@ -53,6 +53,7 @@ class Font {
 		NL "out vec4 out_Color;"
 		NL "in vec2 var_tc;"
 		NL "uniform sampler2D tex;"
+		NL "uniform sampler2D accum;"
 		NL "void main () {"
 		NL "    out_Color = vec4(texture(tex, var_tc).rgb, 1.0);"
 		//NL "    out_Color = vec4(0.0, 1.0, 0.0, 1.0);"
