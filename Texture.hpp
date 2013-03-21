@@ -1,5 +1,4 @@
 #pragma once
-#include <boost/noncopyable.hpp>
 #include <GL/glew.h>
 
 enum class TextureType : GLenum {
@@ -34,7 +33,7 @@ enum class TextureDataType : GLenum {
 };
 
 template<TextureType type>
-class Texture : boost::noncopyable {
+class Texture {
 	GLuint id;
 
 	void _generateId() {
@@ -63,6 +62,9 @@ public:
 
 	Texture () : id(0) {
 	}
+
+	Texture (Texture const&) = delete;
+	Texture& operator= (Texture const&) = delete;
 
 	Texture(Texture&& other) {
 		id = other.id;
