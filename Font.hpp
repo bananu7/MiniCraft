@@ -235,10 +235,13 @@ public:
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 		for (char c : text) {
-			auto const& glyph = fd.getData().at(c);
+			auto it = fd.getData().find(c);
+			if (it != fd.getData().end()) {
+				auto const& glyph = it->second;
 
-			_renderGlyph(glyph.num * 4, position);
-			position += glm::vec2(glyph.xAdvance, 0);
+				_renderGlyph(glyph.num * 4, position);
+				position += glm::vec2(glyph.xAdvance, 0);
+			}
 		}
 
 		glEnable(GL_CULL_FACE);

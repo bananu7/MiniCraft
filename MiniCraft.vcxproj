@@ -99,6 +99,7 @@
     <ClCompile Include="World.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Console.hpp" />
     <ClInclude Include="Font.hpp" />
     <ClInclude Include="FullscreenQuad.hpp" />
     <ClInclude Include="helpers.hpp" />

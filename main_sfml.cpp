@@ -23,6 +23,7 @@
 #include "FullscreenQuad.hpp"
 #include "Font.hpp"
 #include "Texture.hpp"
+#include "Console.hpp"
 #include "helpers.hpp"
 
 #ifdef MINICRAFT_WINDOWS
@@ -177,10 +178,10 @@ void initResources()
 
 void keyboard()
 {
-	if (keys[sf::Keyboard::D])
+	if (keys[sf::Keyboard::Right])
 		Camera.Strafe(-0.2f);
 
-	if (keys[sf::Keyboard::A])
+	if (keys[sf::Keyboard::Left])
 		Camera.Strafe(0.2f);
 
 	if (keys[sf::Keyboard::E])
@@ -188,9 +189,9 @@ void keyboard()
 	if (keys[sf::Keyboard::Q])
 		Camera.LookDir.y -= 5;
 
-	if (keys[sf::Keyboard::S])
+	if (keys[sf::Keyboard::Down])
 		Camera.Fly(-0.2f);
-	if (keys[sf::Keyboard::W])
+	if (keys[sf::Keyboard::Up])
 		Camera.Fly(0.2f);
 	if (keys[sf::Keyboard::Space])
 		Camera.Position.y += 0.2f;
@@ -273,6 +274,12 @@ int main()
 
 	FullscreenQuad fq;
 
+	Console console(glm::ivec2(80, 4));
+	console.setCallback([&console](std::string const& s){
+		if (s == "exit")
+			console.write("OMG EXIT");
+	});
+
 	Texture<TextureType::Texture_2D> mainTexture;
 	mainTexture.bind(0);
 	mainTexture.setFiltering(FilteringDirection::Minification, FilteringMode::Nearest);
@@ -298,12 +305,27 @@ int main()
         {
             if (event.type == sf::Event::Closed)
                 window.close();
-
-			if (event.type == sf::Event::KeyPressed)
+			else if (event.type == sf::Event::KeyPressed)
 				keys[event.key.code] = true;
+			else if (event.type == sf::Event::TextEntered) {
+				if (event.text.unicode == '\b') // ignore backspaces
+					continue;
+				if (event.text.unicode == '\n') // ignore newlines
+					continue;
+				if (event.text.unicode == '\r') // ignore newlines
+					continue;
 
-			if (event.type == sf::Event::KeyReleased)
+				console.inputCharacter(event.text.unicode);
+			}
+
+			if (event.type == sf::Event::KeyReleased) {
 				keys[event.key.code] = false;
+
+				if (event.key.code == sf::Keyboard::Return)
+					console.enter();
+				else if (event.key.code == sf::Keyboard::BackSpace)
+					console.backspace();
+			}
 
 			if (event.type == sf::Event::GainedFocus)
 				active = true;
@@ -329,7 +351,7 @@ int main()
 			mouse(mouseNormalized.x, mouseNormalized.y);
 			sf::Mouse::setPosition(sf::Vector2i(ScreenXSize/2, ScreenYSize/2));
 
-			// rendering
+			// rendering (pre-pass)
 			glBindTexture(GL_TEXTURE_2D, 0);
 			mainFbo.Bind();
 
@@ -340,23 +362,41 @@ int main()
 			glm::mat4 View = Camera.GetViewMat();
 			shader->SetUniform("View", View);
 
+			// world (cubes)
 			image.Bind(0);
 			glEnable(GL_DEPTH_TEST);
 			w.draw();
 
+			// crosshair
 			L[0].draw(glm::mat4(1.0), glm::mat4(1.0));
 			L[1].draw(glm::mat4(1.0), glm::mat4(1.0));
+
+			// raycast line
 			L[2].draw(Projection, View);
 
+			// end preprocessing
 			engine::Framebuffer::Disable();
 			mainTexture.bind(0);
 
+			// final pass with postprocessing
 			fq.draw();
 
 			glDisable(GL_DEPTH_TEST);
-			font.draw("ABCDEFGHIJKLMNOPQRSTUVWXYZ", glm::vec2(20.f, 20.f));
+			/*font.draw("ABCDEFGHIJKLMNOPQRSTUVWXYZ", glm::vec2(20.f, 20.f));
 			font.draw("abcdefghijklmnopqrstuvwxyz", glm::vec2(20.f, 50.f));
-			font.draw("1234567890!@#$%^&*()-=_+[]{};':\",./<>?", glm::vec2(20.f, 80.f));
+			font.draw("1234567890!@#$%^&*()-=_+[]{};':\",./<>?", glm::vec2(20.f, 80.f));*/
+
+			// CONSOLE
+			auto const& cbuf = console.getBuffer();
+			glm::vec2 position (10.f, 760.f);
+
+			font.draw("> " + console.getInputBuffer(), position);
+
+			for (auto const& line : cbuf) {
+				position += glm::vec2(0.f, -30.f);
+				font.draw(line, position);
+			}
+			
 		}
 		
 
