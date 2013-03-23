@@ -311,7 +311,7 @@ int main()
 
 	// temporary test lines
 	// x-line
-	/*for (int i = -2; i < 5; i++) {
+	/*for (int i = -20; i < 20; i++) {
 		w.set(World::CubePos(1, i, 1), 2);
 	}*/
 

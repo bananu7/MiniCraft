@@ -66,19 +66,20 @@ void Minefield::Chunk::_generate(int cx, int cy, int cz) {
 	*/
 
 	// 2D version
-	for (unsigned x = 1; x < size-1; ++x) {
-		for (unsigned z = 1; z < size-1; ++z) {
-			float xf = float(x)/size;
-			float zf = float(z)/size;
+	for (unsigned x = 0; x < size; ++x) {
+		for (unsigned z = 0; z < size; ++z) {
+			/*float xf = float(cx + x) / (size * 10.f);
+			float zf = float(cz + z) / (size * 10.f);
+
 			double value = simplex_noise(1, xf*3, zf*3);
 
 			//compress the range a bit:
-			value *= 0.3;
-			value += 0.3;
+			/*value *= 0.3;
+			value += 0.3;*
 
 			int h = value * size;
 
-			/*for (int i = 0; i < h; ++i) {
+			for (int i = 0; i < h; ++i) {
 				int block = 1;
 
 				if (i < 0.2*size)
@@ -92,7 +93,7 @@ void Minefield::Chunk::_generate(int cx, int cy, int cz) {
 				else
 					block = 67;
 
-				access(x, i, z).value = block;
+				access(InnerChunkCoord(x, i, z)).value = block;
 			}*/
 			access(InnerChunkCoord(x, 0, z)).value = 1;
 		}

@@ -4,7 +4,7 @@
 #include <boost/range/adaptor/map.hpp>
 class Minefield
 {
-	static const int size = 16;
+	static const int size = 32;
 
 public:
 	template<typename Tag>
@@ -48,7 +48,7 @@ public:
 	OuterChunkCoord _convertToOuterChunkCoord(WorldCoord const& wc) {
 		auto convert = [] (const int p) -> int {
 			if (p < 0)
-				return p / size - 1;
+				return (p+1) / size - 1;
 			else
 				return p / size;
 		};

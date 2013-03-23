@@ -166,8 +166,8 @@ std::vector<World::CubePos> World::raycast(glm::vec3 const& pos, glm::vec3 const
 	double x = pos.x, y = pos.y, z = pos.z;
 	const double nx = normal.x, ny = normal.y, nz = normal.z;
 
-	//std::ofstream Log("raycast.txt");
-	boost::onullstream Log;
+	std::ofstream Log("raycast.txt");
+	//boost::onullstream Log;
 
 	std::vector<World::CubePos> Results;
 
