@@ -97,7 +97,7 @@ void World::recalcInstances()
 			for (int y = 0; y < chunkSize; ++y)
 				for (int z = 0; z < chunkSize; ++z)
 				{
-					auto block = chunk.second.access(x,y,z);
+					auto block = chunk.second.access(Minefield::InnerChunkCoord(x,y,z));
 					if (block.value)
 					{
 						bool CanSkip = false;

@@ -47,7 +47,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\PROJECTS\Engine\Engine\include;C:\PROJECTS\Engine\dependencies\glm-0.9.4.1;C:\PROJECTS\Engine\dependencies\SFML-2.0\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\PROJECTS\Engine\Engine\include;C:\DEV\freeglut\include;C:\PROJECTS\Engine\dependencies\glm-0.9.4.1;C:\PROJECTS\Engine\dependencies\pugixml-1.2\src;C:\PROJECTS\Engine\dependencies\SFML-2.0\include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\PROJECTS\Engine\Release;C:\PROJECTS\Engine\dependencies\freeglut\lib;$(LibraryPath)</LibraryPath>
     <IntDir>$(Configuration)\intermediate</IntDir>
   </PropertyGroup>

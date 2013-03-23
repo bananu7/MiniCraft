@@ -65,6 +65,7 @@ void CheckForGLError()
 
 Line* g_L;
 bool g_Run = true;
+bool consoleOn = false;
 
 void init()
 {
@@ -178,10 +179,10 @@ void initResources()
 
 void keyboard()
 {
-	if (keys[sf::Keyboard::Right])
+	if (keys[sf::Keyboard::D])
 		Camera.Strafe(-0.2f);
 
-	if (keys[sf::Keyboard::Left])
+	if (keys[sf::Keyboard::A])
 		Camera.Strafe(0.2f);
 
 	if (keys[sf::Keyboard::E])
@@ -189,9 +190,9 @@ void keyboard()
 	if (keys[sf::Keyboard::Q])
 		Camera.LookDir.y -= 5;
 
-	if (keys[sf::Keyboard::Down])
+	if (keys[sf::Keyboard::S])
 		Camera.Fly(-0.2f);
-	if (keys[sf::Keyboard::Up])
+	if (keys[sf::Keyboard::W])
 		Camera.Fly(0.2f);
 	if (keys[sf::Keyboard::Space])
 		Camera.Position.y += 0.2f;
@@ -220,13 +221,22 @@ void keyboard()
 		glm::vec3 NormV (RMatrix[0].z, RMatrix[1].z, RMatrix[2].z);
 		NormV *= -1.f;
 		
-		auto result = w.raycast(Camera.Position, NormV, 50.f,
+		/*auto result = w.raycast(Camera.Position, NormV, 50.f,
 			World::INCLUDE_EMPTY | World::STOP_ON_FIRST | World::INCLUDE_FIRST);
 		if (result.size() > 1)
 		{
 			w.set(result[result.size()-2], 9);
 			w.recalcInstances();
+		}*/
+
+		auto result = w.raycast(Camera.Position, NormV, 50.f,
+			World::INCLUDE_EMPTY | World::INCLUDE_FIRST);
+
+		for(auto const & c :result){
+			w.set(c,9);
 		}
+
+		w.recalcInstances();
 
 		g_L->set(Camera.Position, Camera.Position + NormV * 50.f);
 		keys[sf::Keyboard::T] = false;
@@ -298,6 +308,23 @@ int main()
 	if (!mainFbo.IsValid())
 		BREAKPOINT();
 
+
+	// temporary test lines
+	// x-line
+	/*for (int i = -2; i < 5; i++) {
+		w.set(World::CubePos(1, i, 1), 2);
+	}*/
+
+	/*// y-line
+	for (int i = -2; i < 5; i++) {
+		w.set(World::CubePos(i, 2, 1), 2);
+	}
+	// z-line
+	for (int i = -2; i < 5; i++) {
+		w.set(World::CubePos(i, 5, 1), 2);
+	}*/
+	w.recalcInstances();
+
 	while (window.isOpen())
     {
         sf::Event event;
@@ -308,23 +335,32 @@ int main()
 			else if (event.type == sf::Event::KeyPressed)
 				keys[event.key.code] = true;
 			else if (event.type == sf::Event::TextEntered) {
-				if (event.text.unicode == '\b') // ignore backspaces
-					continue;
-				if (event.text.unicode == '\n') // ignore newlines
-					continue;
-				if (event.text.unicode == '\r') // ignore newlines
-					continue;
+				if (consoleOn) {
+					if (event.text.unicode == '\b') // ignore backspaces
+						continue;
+					if (event.text.unicode == '\n') // ignore newlines
+						continue;
+					if (event.text.unicode == '\r') // ignore newlines
+						continue;
 
-				console.inputCharacter(event.text.unicode);
+					console.inputCharacter(event.text.unicode);
+				}
 			}
 
 			if (event.type == sf::Event::KeyReleased) {
 				keys[event.key.code] = false;
 
-				if (event.key.code == sf::Keyboard::Return)
-					console.enter();
-				else if (event.key.code == sf::Keyboard::BackSpace)
-					console.backspace();
+				if (event.key.code == sf::Keyboard::Tilde) {
+					consoleOn = !consoleOn;
+					continue;
+				}
+
+				if (consoleOn) {
+					if (event.key.code == sf::Keyboard::Return)
+						console.enter();
+					else if (event.key.code == sf::Keyboard::BackSpace)
+						console.backspace();
+				}
 			}
 
 			if (event.type == sf::Event::GainedFocus)
@@ -387,16 +423,17 @@ int main()
 			font.draw("1234567890!@#$%^&*()-=_+[]{};':\",./<>?", glm::vec2(20.f, 80.f));*/
 
 			// CONSOLE
-			auto const& cbuf = console.getBuffer();
-			glm::vec2 position (10.f, 760.f);
+			if (consoleOn) {
+				auto const& cbuf = console.getBuffer();
+				glm::vec2 position (10.f, 760.f);
 
-			font.draw("> " + console.getInputBuffer(), position);
+				font.draw("> " + console.getInputBuffer(), position);
 
-			for (auto const& line : cbuf) {
-				position += glm::vec2(0.f, -30.f);
-				font.draw(line, position);
+				for (auto const& line : cbuf) {
+					position += glm::vec2(0.f, -30.f);
+					font.draw(line, position);
+				}
 			}
-			
 		}
 		
 

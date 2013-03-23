@@ -4,11 +4,15 @@
 #include <boost/range/adaptor/map.hpp>
 class Minefield
 {
-private:
-	// default chunk is located at 0,0,0
-	struct KeyType {
+	static const int size = 16;
+
+public:
+	template<typename Tag>
+	class Coord {
+	public:
 		int x, y, z;
-		bool operator<(KeyType const& other) const {
+
+		bool operator<(Coord<Tag> const& other) const {
 			if (x != other.x)
 				return x < other.x;
 			else if (y != other.y)
@@ -16,18 +20,42 @@ private:
 			else
 				return z < other.z;
 		}
-		bool operator==(KeyType const& other) const {
+		bool operator==(Coord<Tag> const& other) const {
 			return (x==other.x && y==other.y && z==other.z);
 		}
-		KeyType() 
-			: x(0), y(0), z(0) {
-		}
-		KeyType(int _x, int _y, int _z)
+		Coord() 
+			: x(0), y(0), z(0) { }
+		Coord(int _x, int _y, int _z)
 			: x(_x), y(_y), z(_z) {
 		}
 	};
 
-public:
+	typedef Coord<struct WorldCoordTag> WorldCoord;
+	typedef Coord<struct OuterChunkCoordTag> OuterChunkCoord;
+	typedef Coord<struct InnerChunkCoordTag> InnerChunkCoord;
+
+	InnerChunkCoord _convertToInnerChunkCoord(WorldCoord const& wc) {
+		auto convert = [] (const int p) -> int {
+			if (p<0)
+				return (p % size + size) % size;
+			else
+				return p % size;
+		};
+
+		return InnerChunkCoord(convert(wc.x), convert(wc.y), convert(wc.z));
+	}
+
+	OuterChunkCoord _convertToOuterChunkCoord(WorldCoord const& wc) {
+		auto convert = [] (const int p) -> int {
+			if (p < 0)
+				return p / size - 1;
+			else
+				return p / size;
+		};
+
+		return OuterChunkCoord(convert(wc.x), convert(wc.y), convert(wc.z));
+	}
+
 	struct BlockType {
 		unsigned value;
 		// TEMP - only the facing direction
@@ -37,36 +65,26 @@ public:
 			: value(_value), orientation(_orientation) { }
 	};
 
-	static const int size = 16;
-
 	class Chunk {
 		std::array<BlockType, size*size*size> data;
 
 		void _generate(int cx, int cy, int cz);
 	public:
-		BlockType& access (int x, int y, int z) {
-			if (x < 0 || y < 0 || z < 0 || 
-				x >= size || y >= size || z>= size)
-				throw std::runtime_error("Out of bounds access");
-
-			return data[x + y * size + z * size * size];
+		BlockType& access (InnerChunkCoord const& c) {
+			return data[c.x + c.y * size + c.z * size * size];
 		}
-		BlockType const& access (int x, int y, int z) const {
-			if (x < 0 || y < 0 || z < 0 || 
-				x >= size || y >= size || z>= size)
-				throw std::runtime_error("Out of bounds access");
-
-			return data[x + y * size + z * size * size];
+		BlockType const& access (InnerChunkCoord const& c) const {
+			return data[c.x + c.y * size + c.z * size * size];
 		}
 		Chunk () { }
-		Chunk (int cx, int cy, int cz);		
-		Chunk (KeyType const& ccoords);
+		Chunk (OuterChunkCoord const& ccoords);
 	};
 
 private:
-	static KeyType _getChunkCoordinates (int x, int y, int z);
+	static OuterChunkCoord _getChunkCoordinates (int x, int y, int z);
+	static int _innerChunkCoordFromOuterChunkCoord (int p);
 
-	std::map<KeyType, Chunk> data;
+	std::map<OuterChunkCoord, Chunk> data;
 
 public:
 	unsigned getSize () const { return size; }
