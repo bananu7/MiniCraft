@@ -10,30 +10,30 @@ namespace engine { class Program; }
 
 class World
 {
-	Minefield field;
-	// rendering
-	std::shared_ptr<engine::Program> shader;
-	engine::VertexAttributeArray vao;
-	engine::VertexBuffer positionVbo, texcoordVbo;
+    Minefield field;
+    // rendering
+    std::shared_ptr<engine::Program> shader;
+    engine::VertexAttributeArray vao;
+    engine::VertexBuffer positionVbo, texcoordVbo, normalVbo;
 
-	unsigned visibleCubesCount;
+    unsigned visibleCubesCount;
 
 public:
-	void init();
-	void recalcInstances();
-	void draw();
+    void init();
+    void recalcInstances();
+    void draw();
 
-	struct CubePos { int x, y, z; CubePos(int _x, int _y, int _z) : x(_x), y(_y), z(_z) {} };
+    struct CubePos { int x, y, z; CubePos(int _x, int _y, int _z) : x(_x), y(_y), z(_z) {} };
 
-	void set(CubePos const& pos, int val) { field.set(pos.x, pos.y, pos.z, val); }
+    void set(CubePos const& pos, int val) { field.set(pos.x, pos.y, pos.z, val); }
 
-	enum RayCastParams {
-		STOP_ON_FIRST = 1, // stop on first nonzero cube hit
-		INCLUDE_EMPTY = 2, // include empty(zero) cubes traversed in the results
-		INCLUDE_FIRST = 4  // include the starting cube at the beggining of the result
-	};
-	std::vector<CubePos> raycast(glm::vec3 const& start, glm::vec3 const& normal, float l, int stopOnFirstHit);
+    enum RayCastParams {
+        STOP_ON_FIRST = 1, // stop on first nonzero cube hit
+        INCLUDE_EMPTY = 2, // include empty(zero) cubes traversed in the results
+        INCLUDE_FIRST = 4  // include the starting cube at the beggining of the result
+    };
+    std::vector<CubePos> raycast(glm::vec3 const& start, glm::vec3 const& normal, float l, int stopOnFirstHit);
 
-	World(std::shared_ptr<engine::Program> shader);
+    World(std::shared_ptr<engine::Program> shader);
 };
 
