@@ -84,6 +84,8 @@ public:
         }
         Chunk () { }
         Chunk (OuterChunkCoord const& ccoords);
+
+        friend class Minefield;
     };
 
 private:
@@ -104,6 +106,9 @@ public:
     auto getChunks () -> decltype(data) {
         return data; 
     }
+
+    void loadFromFile(std::string const& path);
+    void saveToFile(std::string const& path) const;
 
     Minefield();
 };

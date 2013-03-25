@@ -34,6 +34,9 @@ public:
     };
     std::vector<CubePos> raycast(glm::vec3 const& start, glm::vec3 const& normal, float l, int stopOnFirstHit);
 
+    void saveToFile (std::string const& path) const { field.saveToFile(path); }
+    void loadFromFile (std::string const& path) { field.loadFromFile(path); recalcInstances(); }
+
     World(std::shared_ptr<engine::Program> shader);
 };
 

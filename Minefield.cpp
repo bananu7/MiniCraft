@@ -2,6 +2,8 @@
 #include "simplex.h"
 #include <random>
 #include <cmath>
+#include <fstream>
+#include <cstdint>
 
 using std::make_pair;
 
@@ -118,6 +120,89 @@ void Minefield::Chunk::_generate(int cx, int cy, int cz) {
     }*/
 }
 
+// Serialization
+
+struct Header {
+    uint32_t version;
+
+    // chunk size in blocks
+    uint32_t numberOfChunks;
+    int32_t chunkSizeX;
+    int32_t chunkSizeY;
+    int32_t chunkSizeZ;
+        
+    uint32_t blockDataSize;
+};
+
+struct ChunkHeader {
+    int32_t chunkPositionX;
+    int32_t chunkPositionY;
+    int32_t chunkPositionZ;
+};
+
+void Minefield::loadFromFile(std::string const& path) {
+    std::ifstream file(path, std::ios::binary);
+    if (!file)
+        throw std::runtime_error("problem opening file");
+
+    data.clear();
+
+    uint32_t headerSize;
+    file.read((char*)(&headerSize), sizeof(headerSize));
+
+    Header h;
+    file.read((char*)(&h), sizeof(h));
+
+    if (h.version != 1)
+        throw std::runtime_error("wrong file version");
+
+    for (unsigned i = 0; i < h.numberOfChunks; ++i) {
+        ChunkHeader ch;
+        file.read((char*)(&ch), sizeof(ch));
+
+        Chunk c;
+
+        file.read((char *)(c.data.data()), c.data.size() * sizeof(BlockType));
+
+        data.emplace(make_pair(OuterChunkCoord(ch.chunkPositionX, ch.chunkPositionY, ch.chunkPositionZ), c));
+    }
+}
+void Minefield::saveToFile(std::string const& path) const {
+    std::ofstream file(path, std::ios::binary);
+    if (!file)
+        throw std::runtime_error("problem opening file");
+    
+    const uint32_t headerSize = sizeof(Header);
+    file.write((const char*)(&headerSize), sizeof(headerSize));
+
+    Header h;
+    h.version = 1;
+    h.blockDataSize = sizeof(BlockType);
+    h.numberOfChunks = data.size();
+    h.chunkSizeX = h.chunkSizeY = h.chunkSizeZ = size;
+
+    file.write((const char*)(&h), sizeof(h));
+
+    // chunks
+
+    auto serializeChunk = [&file] (Chunk const& chunk) {
+        file.write((const char *)(chunk.data.data()), chunk.data.size() * sizeof(BlockType));
+    };
+
+    for (auto const& v : data) {
+
+        ChunkHeader ch;
+        ch.chunkPositionX = v.first.x;
+        ch.chunkPositionY = v.first.y;
+        ch.chunkPositionZ = v.first.z;
+
+        file.write((const char*)(&ch), sizeof(ch));
+
+        serializeChunk(v.second);
+    }
+}
+
 Minefield::Chunk::Chunk(OuterChunkCoord const& ccoords) {
     _generate(ccoords.x, ccoords.y, ccoords.z);
 }
+

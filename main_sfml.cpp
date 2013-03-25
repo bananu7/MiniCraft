@@ -305,6 +305,11 @@ int main()
             console.write("OMG EXIT");
         else if (s == "recalc")
             w.recalcInstances();
+        else if (s == "save")
+            w.saveToFile("world.mcw");
+        else if (s == "load") {
+            w.loadFromFile("world.mcw");
+        }
     });
 
     Texture<TextureType::Texture_2D> mainTexture;
