@@ -253,7 +253,7 @@ void keyboard()
 
         w.recalcInstances();
 
-        g_L->set(Camera.Position, Camera.Position + NormV * 50.f);
+        g_L->set(Camera.Position, Camera.Position + NormV * 20.f);
         keys[sf::Keyboard::T] = false;
     }
 

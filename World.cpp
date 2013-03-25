@@ -132,9 +132,11 @@ void World::recalcInstances()
                             // 6 walls
                             for (unsigned wall = 0; wall < 6; ++wall) {
                                 //check if the wall is obscured
-                                int neighVal = field.get(x + xOff[wall], y + yOff[wall], z + zOff[wall]).value;
-                                //if (neighVal == 0) { 
-                                {
+
+                                int neighVal = field.get(chunk.first.x * chunkSize + x + xOff[wall],
+                                                         chunk.first.y * chunkSize + y + yOff[wall],
+                                                         chunk.first.z * chunkSize + z + zOff[wall]).value;
+                                if (neighVal == 0) {
                                     // Each wall has two triangles
                                     for (int t = 0; t < 6; ++t) {
 
@@ -166,7 +168,7 @@ void World::draw()
     vao.Bind();
     shader->Bind();
 
-    glDisable(GL_CULL_FACE);
+    //glDisable(GL_CULL_FACE);
     glDrawArrays(GL_TRIANGLES, 0, visibleCubesCount * 36);
     //glDrawArraysInstancedBaseInstance(GL_TRIANGLES, 0, 36, visibleCubesCount, 0);
     //glDrawArraysInstanced(GL_TRIANGLES, 0, 36, visibleCubesCount);

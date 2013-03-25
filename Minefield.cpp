@@ -7,10 +7,10 @@ using std::make_pair;
 
 Minefield::BlockType Minefield::get(const int x, const int y, const int z) {
     WorldCoord wc (x, y, z);
-    auto it = data.find(_convertToOuterChunkCoord(wc));
+    auto it = data.find(convertToOuter(wc));
 
     if (it != data.end()) {
-        auto ic = _convertToInnerChunkCoord(wc);
+        auto ic = convertToInner(wc);
         return it->second.access(ic);
     }
     else
@@ -18,10 +18,10 @@ Minefield::BlockType Minefield::get(const int x, const int y, const int z) {
 }
 void Minefield::set(const int x, const int y, const int z, unsigned value) {
     WorldCoord wc (x, y, z);
-    OuterChunkCoord oc = _convertToOuterChunkCoord(wc);
+    OuterChunkCoord oc = convertToOuter(wc);
 
     auto it = data.find(oc);
-    auto ic = _convertToInnerChunkCoord(wc);
+    InnerChunkCoord ic = convertToInner(wc);
 
     if (it != data.end()) {
         it->second.access(ic).value = value;

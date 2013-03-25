@@ -7,22 +7,22 @@ class Minefield
     static const int size = 12;
 
 public:
+    struct WorldCoordTag;
+    struct OuterChunkCoordTag;
+    struct InnerChunkCoordTag;
+
+    template<typename Tag>
+    class Coord;
+
+    typedef Coord<WorldCoordTag> WorldCoord;
+    typedef Coord<OuterChunkCoordTag> OuterChunkCoord;
+    typedef Coord<InnerChunkCoordTag> InnerChunkCoord;
+
     template<typename Tag>
     class Coord {
     public:
         int x, y, z;
-
-        bool operator<(Coord<Tag> const& other) const {
-            if (x != other.x)
-                return x < other.x;
-            else if (y != other.y)
-                return y < other.y;
-            else
-                return z < other.z;
-        }
-        bool operator==(Coord<Tag> const& other) const {
-            return (x==other.x && y==other.y && z==other.z);
-        }
+        
         Coord() 
             : x(0), y(0), z(0) { }
         Coord(int _x, int _y, int _z)
@@ -30,31 +30,37 @@ public:
         }
     };
 
-    typedef Coord<struct WorldCoordTag> WorldCoord;
-    typedef Coord<struct OuterChunkCoordTag> OuterChunkCoord;
-    typedef Coord<struct InnerChunkCoordTag> InnerChunkCoord;
+    OuterChunkCoord convertToOuter (WorldCoord const& wc) {
+            auto convertOne = [] (const int p) -> int {
+                if (p < 0)
+                    return (p+1) / size - 1;
+                else
+                    return p / size;
+            };
 
-    InnerChunkCoord _convertToInnerChunkCoord(WorldCoord const& wc) {
-        auto convert = [] (const int p) -> int {
+            return OuterChunkCoord(convertOne(wc.x), convertOne(wc.y), convertOne(wc.z));
+    }
+
+    InnerChunkCoord convertToInner (WorldCoord const& wc) {
+        auto convertOne = [] (const int p) -> int {
             if (p<0)
                 return (p % size + size) % size;
             else
                 return p % size;
         };
 
-        return InnerChunkCoord(convert(wc.x), convert(wc.y), convert(wc.z));
+        return InnerChunkCoord(convertOne(wc.x), convertOne(wc.y), convertOne(wc.z));
     }
 
-    OuterChunkCoord _convertToOuterChunkCoord(WorldCoord const& wc) {
-        auto convert = [] (const int p) -> int {
-            if (p < 0)
-                return (p+1) / size - 1;
-            else
-                return p / size;
+    WorldCoord convertToWorld (InnerChunkCoord const& ic, OuterChunkCoord const& oc) {
+        auto convertOne = [] (const int i, const int o) -> int {
+            return o + i * size;
         };
 
-        return OuterChunkCoord(convert(wc.x), convert(wc.y), convert(wc.z));
+        return WorldCoord(convertOne(ic.x,oc.x), convertOne(ic.y, oc.y), convertOne(ic.z, oc.z));
     }
+
+
 
     struct BlockType {
         unsigned value;
@@ -101,3 +107,18 @@ public:
 
     Minefield();
 };
+
+template<typename Tag>
+bool operator<(Minefield::Coord<Tag> const& a, Minefield::Coord<Tag> const& b) {
+        if (a.x != b.x)
+            return a.x < b.x;
+        else if (a.y != b.y)
+            return a.y < b.y;
+        else
+            return a.z < b.z;
+}
+
+template<typename Tag>
+bool operator==(Minefield::Coord<Tag> const& a, Minefield::Coord<Tag> const& b) {
+    return (a.x==b.x && a.y==b.y && a.z==b.z);
+}
