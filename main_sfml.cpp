@@ -84,7 +84,7 @@ void initShadersEngine()
     CheckForGLError();
 
     std::string vert = 
-            "#version 400 core"
+            "#version 330 core"
           NL"layout(location = 0) in vec3 position;"
           NL"layout(location = 1) in vec2 texCoord;"
           NL"layout(location = 2) in vec3 normal;"
@@ -112,7 +112,7 @@ void initShadersEngine()
           NL"}";
     
     std::string frag = 
-            "#version 400 core"
+            "#version 330 core"
           NL
           NL"out vec4 out_Color;"
           NL"in vec2 var_texCoord;"
@@ -277,7 +277,7 @@ int WINAPI WinMain (HINSTANCE hInstance,
 int main()
 #endif
 {
-    sf::Window window(sf::VideoMode(ScreenXSize, ScreenYSize), "Minicraft v0.2", 7, sf::ContextSettings(24, 0, 0, 4, 0));
+    sf::Window window(sf::VideoMode(ScreenXSize, ScreenYSize), "Minicraft v0.2", 7, sf::ContextSettings(24, 0, 0, 3, 3));
 
     window.setMouseCursorVisible(false);
 
@@ -298,6 +298,8 @@ int main()
     Font font;
 
     FullscreenQuad fq;
+
+    Camera.Position.y += 10.f;
 
     Console console(glm::ivec2(80, 4));
     console.setCallback([&console](std::string const& s){

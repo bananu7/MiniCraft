@@ -36,7 +36,7 @@ class Font {
 
     void _initShaders() {
         std::string vert = 
-        "#version 400 core"
+        "#version 330 core"
         NL "layout(location = 0) in vec2 in_offset;"
         NL "layout(location = 1) in vec2 in_texcoord;"
         NL "uniform mat4 Projection;"
@@ -49,7 +49,7 @@ class Font {
         NL "}" NL;
 
         std::string frag = 
-        "#version 400 core"
+        "#version 330 core"
         NL "out vec4 out_Color;"
         NL "in vec2 var_tc;"
         NL "uniform sampler2D tex;"

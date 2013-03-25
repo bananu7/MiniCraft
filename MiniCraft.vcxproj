@@ -49,7 +49,7 @@
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>C:\PROJECTS\Engine\Engine\include;C:\DEV\freeglut\include;C:\PROJECTS\Engine\dependencies\glm-0.9.4.1;C:\PROJECTS\Engine\dependencies\pugixml-1.2\src;C:\PROJECTS\Engine\dependencies\SFML-2.0\include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\PROJECTS\Engine\Release;C:\PROJECTS\Engine\dependencies\freeglut\lib;$(LibraryPath)</LibraryPath>
-    <IntDir>$(Configuration)\intermediate</IntDir>
+    <IntDir>$(Configuration)\intermediate\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -82,6 +82,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Cpp0xSupport>true</Cpp0xSupport>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

@@ -22,7 +22,7 @@ public:
         vao.Bind();
 
         std::string vert = 
-        "#version 400 core"
+        "#version 330 core"
         NL "precision mediump float;"
         NL "layout(location = 0) in vec3 in_position;"
         NL "uniform mat4 Projection, View;"
@@ -31,7 +31,7 @@ public:
         NL "}" NL;
 
         std::string frag = 
-        "#version 400 core"
+        "#version 330 core"
         NL "precision mediump float;"
         NL "out vec4 out_Color;"
         NL "void main () {"
