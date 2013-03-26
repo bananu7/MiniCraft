@@ -28,6 +28,10 @@
     <ClCompile Include="src\Texture.cpp" />
     <ClCompile Include="src\World.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Data\shaders\main_cubes.frag" />
+    <None Include="Data\shaders\main_cubes.vert" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{9F7D6D30-DFA3-4171-8931-659FA68D7804}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>

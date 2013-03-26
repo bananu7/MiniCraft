@@ -39,8 +39,6 @@ bool fullscreen= true; // Fullscreen Flag Set To Fullscreen Mode By Default
 const int ScreenXSize = 1280;
 const int ScreenYSize = 800;
 
-#define NL "\n"
-
 using std::vector;
 using std::string;
 using std::unique_ptr;
@@ -83,68 +81,26 @@ void initShadersEngine()
 {
     CheckForGLError();
 
-    std::string vert = 
-            "#version 330 core"
-          NL"layout(location = 0) in vec3 position;"
-          NL"layout(location = 1) in vec2 texCoord;"
-          NL"layout(location = 2) in vec3 normal;"
-          NL
-          NL"uniform mat4 Projection, View;"
-          NL
-          NL"out vec2 var_texCoord;"
-          NL"out vec3 var_lightIntensity;"
-          NL
-          NL"void main () {"
-          NL"    var_texCoord = texCoord;"
-          NL
-          NL"    vec4 LightPosition = vec4(1000, 1000, 1000, 1);"
-          NL"    vec3 LightIntensity = vec3(0.8, 0.8, 0.8);"
-          NL"    vec3 MaterialDiffuseReflectivity = vec3(1.0, 1.0, 1.0);"
-          NL
-          NL"    mat3 NormalMatrix = inverse(transpose(mat3(View)));"
-          NL"    vec3 tnorm = normalize(NormalMatrix * normal);"
-          NL"    vec4 eye = View * vec4(position, 1.0);"
-          NL"    vec3 s = normalize(vec3(LightPosition - eye));"
-          NL"    // The diffuse shading equation"
-          NL"    var_lightIntensity = LightIntensity * MaterialDiffuseReflectivity * max( dot( s, tnorm ), 0.0 );"
-          NL
-          NL"    gl_Position = Projection * View * vec4(position, 1.0);"
-          NL"}";
-    
-    std::string frag = 
-            "#version 330 core"
-          NL
-          NL"out vec4 out_Color;"
-          NL"in vec2 var_texCoord;"
-          NL"in vec3 var_lightIntensity;"
-          NL
-          NL"uniform sampler2D Texture;"
-          NL
-          NL"void main () {"
-        //NL"    out_Color = vec4(0.0, 1.0, 0.0, 1.0);"
-         // NL"    out_Color = vec4((out_position.xyz + 1)/2, 1.0);"
-        //  NL"    out_Color = vec4(out_texCoord, 0.0, 1.0);"
-          NL"    vec2 tc = var_texCoord;"
-          NL"    out_Color = /*vec4(var_lightIntensity, 1.0) */ vec4(texture(Texture, tc).rgb, 1.0);"
-          NL"}";
+    std::ifstream vert("../Data/shaders/main_cubes.vert");
+    std::ifstream frag("../Data/shaders/main_cubes.frag");
 
     typedef unsigned char uc;
     try 
     {
         {
-            auto vs = std::make_shared<engine::VertexShader>(vert);
+            auto vs = std::make_shared<engine::VertexShader>(istreambuf_range<char>(vert));
             vs->Compile();
             if (!vs)
-                throw (vs->Status());
+                throw std::runtime_error(vs->Status());
             shader->AttachShader(vs);
         }
         CheckForGLError();
 
         {
-            auto fs = std::make_shared<engine::FragmentShader>(frag);
+            auto fs = std::make_shared<engine::FragmentShader>(istreambuf_range<char>(frag));
             fs->Compile();
             if (!fs)
-                throw (fs->Status());
+                throw std::runtime_error(fs->Status());
             shader->AttachShader(fs);
         }
         CheckForGLError();
