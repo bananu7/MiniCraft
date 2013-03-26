@@ -10,6 +10,24 @@
       <Platform>Win32</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\Console.hpp" />
+    <ClInclude Include="src\Font.hpp" />
+    <ClInclude Include="src\FullscreenQuad.hpp" />
+    <ClInclude Include="src\helpers.hpp" />
+    <ClInclude Include="src\Line.hpp" />
+    <ClInclude Include="src\Minefield.h" />
+    <ClInclude Include="src\simplex.h" />
+    <ClInclude Include="src\Texture.hpp" />
+    <ClInclude Include="src\World.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\main_sfml.cpp" />
+    <ClCompile Include="src\Minefield.cpp" />
+    <ClCompile Include="src\simplex.cpp" />
+    <ClCompile Include="src\Texture.cpp" />
+    <ClCompile Include="src\World.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{9F7D6D30-DFA3-4171-8931-659FA68D7804}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -82,7 +100,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Cpp0xSupport>true</Cpp0xSupport>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -92,24 +110,6 @@
       <AdditionalDependencies>glew32.lib;opengl32.lib;Engine.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="main_sfml.cpp" />
-    <ClCompile Include="Minefield.cpp" />
-    <ClCompile Include="simplex.cpp" />
-    <ClCompile Include="Texture.cpp" />
-    <ClCompile Include="World.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Console.hpp" />
-    <ClInclude Include="Font.hpp" />
-    <ClInclude Include="FullscreenQuad.hpp" />
-    <ClInclude Include="helpers.hpp" />
-    <ClInclude Include="Line.hpp" />
-    <ClInclude Include="Minefield.h" />
-    <ClInclude Include="simplex.h" />
-    <ClInclude Include="Texture.hpp" />
-    <ClInclude Include="World.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
