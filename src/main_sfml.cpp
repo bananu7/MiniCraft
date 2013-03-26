@@ -89,7 +89,9 @@ void initShadersEngine()
     {
         {
             auto vs = std::make_shared<engine::VertexShader>(istreambuf_range<char>(vert));
-            vs->Compile();
+            auto compResult = vs->Compile();
+            if (!compResult.empty())
+                throw std::runtime_error(compResult);
             if (!vs)
                 throw std::runtime_error(vs->Status());
             shader->AttachShader(vs);
@@ -98,7 +100,9 @@ void initShadersEngine()
 
         {
             auto fs = std::make_shared<engine::FragmentShader>(istreambuf_range<char>(frag));
-            fs->Compile();
+            auto compResult = fs->Compile();
+            if (!compResult.empty())
+                throw std::runtime_error(compResult);
             if (!fs)
                 throw std::runtime_error(fs->Status());
             shader->AttachShader(fs);
@@ -115,7 +119,7 @@ void initShadersEngine()
         CheckForGLError();
     }
     catch (std::exception const& e) {
-        //MessageBox(0, e.what(), "Exception", MB_OK | MB_ICONERROR);
+        ERROR_MESSAGE(e.what(), "Exception");
         BREAKPOINT();
     }
 
