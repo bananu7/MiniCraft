@@ -17,23 +17,40 @@ if platform.system() == 'Windows':
     env = Environment(tools = ['mingw'], ENV = os.environ)
     env.PrependENVPath('PATH', mingw_path + "bin/")
     env.PrependENVPath('LIB', mingw_path + "lib/")
-    #Progress(mingw_path + "bin/")
+    
+    # these aren't needed on *ix systems, since libraries are allready
+    # in some sort of /usr/lib/
+    env.Append(CPPPATH=[
+        engine_path + "dependencies/pugixml/include/",
+        engine_path + "dependencies/glew-1.9.0/include/",
+        engine_path + "dependencies/glm-0.9.4.1/",
+        engine_path + "dependencies/pugixml-1.2/src/",
+        boost_path,
+    ])
 else:
     env = Environment(ENV = os.environ)
 
-env.Append(CPPFLAGS="-Wall -fPIC -g -std=c++11")
+env.Append(CPPFLAGS="-Wall -g -std=c++11")
 env.Append(CPPDEFINES="GLEW_NO_GLU")
+env.Append(CPPDEFINES="SFML_STATIC")
+env.Append(CPPDEFINES="GLEW_STATIC")
 
-env.Append(CPPPATH= ";" + engine_path + "Engine/include/")
-env.Append(CPPPATH= ";" + engine_path + "dependencies/pugixml/include/")
-env.Append(CPPPATH= ";" + engine_path + "dependencies/SFML-2.0/include/")
-env.Append(CPPPATH= ";" + engine_path + "dependencies/glew-1.9.0/include/")
-env.Append(CPPPATH= ";" + engine_path + "dependencies/glm-0.9.4.1/")
-env.Append(CPPPATH= ";" + engine_path + "dependencies/pugixml-1.2/src/")
-env.Append(CPPPATH= ";" + boost_path)
+env.Append(CPPPATH= engine_path + "Engine/include/")
+# SFML is compiled from sources, so we need to add it
+env.Append(CPPPATH= engine_path + "dependencies/SFML-2.0/include/")
 
-env.Append(LIBPATH= ";" + engine_path + "Release/")
+# TODO : add Debug here
+env.Append(LIBPATH=[
+    engine_path,
+    engine_path + "dependencies/glew-1.9.0/lib/",
+    engine_path + "dependencies/pugixml-1.2/lib/",
+])
 
 cpp_files = Glob("src/*.cpp")
-exe = env.Program(target='Minicraft', source = cpp_files, LIBS=['Engine'])
+exe = env.Program(target='Minicraft', source = cpp_files, LIBS=[
+'Engine',
+'SFML',
+'opengl32',
+'glew32',
+])
 

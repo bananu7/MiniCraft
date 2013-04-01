@@ -8,7 +8,9 @@
 using std::make_pair;
 
 Minefield::BlockType Minefield::get(const int x, const int y, const int z) {
-    WorldCoord wc (x, y, z);
+    return get(WorldCoord(x,y,z));
+}
+Minefield::BlockType Minefield::get(Minefield::WorldCoord const& wc) {
     auto it = data.find(convertToOuter(wc));
 
     if (it != data.end()) {
@@ -18,6 +20,7 @@ Minefield::BlockType Minefield::get(const int x, const int y, const int z) {
     else
         return BlockType();
 }
+
 void Minefield::set(const int x, const int y, const int z, unsigned value) {
     WorldCoord wc (x, y, z);
     OuterChunkCoord oc = convertToOuter(wc);

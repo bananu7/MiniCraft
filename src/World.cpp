@@ -24,9 +24,13 @@ glm::vec2 calculateTexCoords (Minefield::BlockType block, unsigned wall)
         return offset(block.value);
 }
 
-void World::init()
-{
-    // create
+World::DisplayChunk::DisplayChunk(Minefield::OuterChunkCoord c) :
+    positionVbo(engine::VertexBuffer::DATA_BUFFER, engine::VertexBuffer::STATIC_DRAW),
+    texcoordVbo(engine::VertexBuffer::DATA_BUFFER, engine::VertexBuffer::STATIC_DRAW),
+    normalVbo(engine::VertexBuffer::DATA_BUFFER, engine::VertexBuffer::STATIC_DRAW),
+    visibleWallsCount(0),
+    coord(std::move(c))
+{ 
     vao.Bind();
     //vertex-data position
     positionVbo.Bind();
@@ -47,11 +51,29 @@ void World::init()
         BREAKPOINT();
 }
 
-void World::recalcInstances()
+void World::DisplayChunk::draw () {
+    vao.Bind();
+    //glDisable(GL_CULL_FACE);
+    glDrawArrays(GL_TRIANGLES, 0, visibleWallsCount * 6);
+    GLenum e = glGetError();
+    if (e != GL_NO_ERROR)
+        BREAKPOINT();
+
+    //glDrawArraysInstancedBaseInstance(GL_TRIANGLES, 0, 36, visibleCubesCount, 0);
+    //glDrawArraysInstanced(GL_TRIANGLES, 0, 36, visibleCubesCount);
+}
+
+void World::init()
 {
-    // specify data
-    
-    static const std::array<glm::vec3, 8> Verts = {
+}
+
+void World::_recalcChunk(World::DisplayChunk & c) {
+    c.visibleWallsCount = 0;
+    std::vector<glm::vec3> Positions;
+    std::vector<glm::vec2> Texcoords;
+    std::vector<glm::vec3> Normals;
+
+     static const std::array<glm::vec3, 8> Verts = {
         glm::vec3(0.f, 0.f, 0.f),
         glm::vec3(0.f, 0.f, 1.f),
         glm::vec3(0.f, 1.f, 0.f),
@@ -100,63 +122,71 @@ void World::recalcInstances()
         5,1,0,    5,0,4  // bottom
     };
 
-    visibleCubesCount = 0;
-    std::vector<glm::vec3> Positions;
-    std::vector<glm::vec2> Texcoords;
-    std::vector<glm::vec3> Normals;
+    glm::vec3 chunkOffset (c.coord.x * c.size, c.coord.y * c.size, c.coord.z * c.size);
 
-    const int chunkSize = field.getSize();
+    for (int x = 0; x < c.size; ++x)
+        for (int y = 0; y < c.size; ++y)
+            for (int z = 0; z < c.size; ++z)
+            {
+                auto Wc = Minefield::convertToWorld(Minefield::InnerChunkCoord(x, y, z), c.coord);
 
-    for (auto const& chunk : field.getChunks()) {
-        glm::vec3 chunkOffset (chunk.first.x * chunkSize, chunk.first.y * chunkSize, chunk.first.z * chunkSize);
+                //auto block = chunk.access(Minefield::InnerChunkCoord(x,y,z));
+                auto block = field.get(Wc);
 
-        for (int x = 0; x < chunkSize; ++x)
-            for (int y = 0; y < chunkSize; ++y)
-                for (int z = 0; z < chunkSize; ++z)
+                if (block.value)
                 {
-                    auto block = chunk.second.access(Minefield::InnerChunkCoord(x,y,z));
-                    if (block.value)
-                    {
-                        bool CanSkip = false;
-                        unsigned numNeighs = 0;
+                    // Add frustum culling here?
 
-                        // Add frustum culling here?
+                    // Generate output vertices into VBOs
+                  
+                    static const int xOff [] = { 0, 1, 0, -1, 0, 0 };
+                    static const int yOff [] = { 0, 0, 0, 0, 1, -1 };
+                    static const int zOff [] = { 1, 0, -1, 0, 0, 0 };
 
-                        // Generate output vertices into VBOs
-                        if (!CanSkip)
-                        {
-                            static const int xOff [] = { 0, 1, 0, -1, 0, 0 };
-                            static const int yOff [] = { 0, 0, 0, 0, 1, -1 };
-                            static const int zOff [] = { 1, 0, -1, 0, 0, 0 };
+                    // 6 walls
+                    for (unsigned wall = 0; wall < 6; ++wall) {
+                        //check if the wall is obscured
 
-                            // 6 walls
-                            for (unsigned wall = 0; wall < 6; ++wall) {
-                                //check if the wall is obscured
+                        int neighVal = field.get(c.coord.x * c.size + x + xOff[wall],
+                                                 c.coord.y * c.size + y + yOff[wall],
+                                                 c.coord.z * c.size + z + zOff[wall]).value;
+                        if (neighVal == 0) {
+                            // Each wall has two triangles
+                            for (int t = 0; t < 6; ++t) {
 
-                                int neighVal = field.get(chunk.first.x * chunkSize + x + xOff[wall],
-                                                         chunk.first.y * chunkSize + y + yOff[wall],
-                                                         chunk.first.z * chunkSize + z + zOff[wall]).value;
-                                if (neighVal == 0) {
-                                    // Each wall has two triangles
-                                    for (int t = 0; t < 6; ++t) {
+                                unsigned vert_num = Walls[t + wall * 6];
+                                Positions.push_back(Verts[vert_num] + glm::vec3(x,y,z) + chunkOffset);
 
-                                        unsigned vert_num = Walls[t + wall * 6];
-                                        Positions.push_back(Verts[vert_num] + glm::vec3(x,y,z) + chunkOffset);
-
-                                        Texcoords.push_back(TexCoords[t]/16.f + calculateTexCoords(block, wall));
-                                        Normals.push_back(NormalTable[wall]);
-                                    }
-                                }
+                                Texcoords.push_back(TexCoords[t]/16.f + calculateTexCoords(block, wall));
+                                Normals.push_back(NormalTable[wall]);
                             }
-                    
-                            ++visibleCubesCount;
+
+                            ++c.visibleWallsCount;
                         }
                     }
                 }
+            }
+
+    c.positionVbo.LoadData(Positions.data(), Positions.size() * sizeof(glm::vec3));
+    c.texcoordVbo.LoadData(Texcoords.data(), Texcoords.size() * sizeof(glm::vec2));
+    c.normalVbo.LoadData(Normals.data(), Normals.size() * sizeof(glm::vec3));
+}
+
+void World::recalcInstances()
+{
+    // specify data
+    for (auto const& chunk : field.getChunks()) {
+        auto dcIt = displayChunks.find(chunk.first);
+        if (dcIt != displayChunks.end())
+            _recalcChunk(dcIt->second);
+        else {
+            DisplayChunk dc(chunk.first);
+            _recalcChunk(dc);
+            Minefield::OuterChunkCoord oc = chunk.first;
+
+            displayChunks.insert(std::make_pair(oc, std::move(dc)));
+        }
     }
-    positionVbo.LoadData(Positions.data(), Positions.size() * sizeof(glm::vec3));
-    texcoordVbo.LoadData(Texcoords.data(), Texcoords.size() * sizeof(glm::vec2));
-    normalVbo.LoadData(Normals.data(), Normals.size() * sizeof(glm::vec3));
 }
 
 void World::draw()
@@ -165,13 +195,9 @@ void World::draw()
     if (e != GL_NO_ERROR)
         BREAKPOINT();
 
-    vao.Bind();
     shader->Bind();
-
-    //glDisable(GL_CULL_FACE);
-    glDrawArrays(GL_TRIANGLES, 0, visibleCubesCount * 36);
-    //glDrawArraysInstancedBaseInstance(GL_TRIANGLES, 0, 36, visibleCubesCount, 0);
-    //glDrawArraysInstanced(GL_TRIANGLES, 0, 36, visibleCubesCount);
+    for (auto & chunk : displayChunks) 
+        chunk.second.draw();
 }
 
 #include <fstream>
@@ -327,10 +353,7 @@ std::vector<World::CubePos> World::raycast(glm::vec3 const& pos, glm::vec3 const
 }
 
 World::World(std::shared_ptr<engine::Program> _shader) :
-    shader(std::move(_shader)),
-    positionVbo(engine::VertexBuffer::DATA_BUFFER, engine::VertexBuffer::STATIC_DRAW),
-    texcoordVbo(engine::VertexBuffer::DATA_BUFFER, engine::VertexBuffer::STATIC_DRAW),
-    normalVbo(engine::VertexBuffer::DATA_BUFFER, engine::VertexBuffer::STATIC_DRAW)
+    shader(std::move(_shader))
 {
 
 }

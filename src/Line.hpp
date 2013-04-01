@@ -88,7 +88,6 @@ public:
     void draw (glm::mat4 const& projection, glm::mat4 const& view)
     {
         vao.Bind();
-        vbo.Bind();
         program.SetUniform("Projection", projection);
         program.SetUniform("View", view);
         program.Bind();

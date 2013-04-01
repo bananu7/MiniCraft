@@ -11,7 +11,7 @@
 
 #define NL "\n"
 
-class FullscreenQuad : boost::noncopyable 
+class FullscreenQuad
 {
     engine::VertexBuffer vbo;
     engine::VertexAttributeArray vao;

@@ -4,9 +4,9 @@
 #include <boost/range/adaptor/map.hpp>
 class Minefield
 {
+public:
     static const int size = 12;
 
-public:
     struct WorldCoordTag;
     struct OuterChunkCoordTag;
     struct InnerChunkCoordTag;
@@ -30,18 +30,18 @@ public:
         }
     };
 
-    OuterChunkCoord convertToOuter (WorldCoord const& wc) {
-            auto convertOne = [] (const int p) -> int {
-                if (p < 0)
-                    return (p+1) / size - 1;
-                else
-                    return p / size;
-            };
+    static OuterChunkCoord convertToOuter (WorldCoord const& wc) {
+        auto convertOne = [] (const int p) -> int {
+            if (p < 0)
+                return (p+1) / size - 1;
+            else
+                return p / size;
+        };
 
-            return OuterChunkCoord(convertOne(wc.x), convertOne(wc.y), convertOne(wc.z));
+        return OuterChunkCoord(convertOne(wc.x), convertOne(wc.y), convertOne(wc.z));
     }
 
-    InnerChunkCoord convertToInner (WorldCoord const& wc) {
+    static InnerChunkCoord convertToInner (WorldCoord const& wc) {
         auto convertOne = [] (const int p) -> int {
             if (p<0)
                 return (p % size + size) % size;
@@ -52,15 +52,13 @@ public:
         return InnerChunkCoord(convertOne(wc.x), convertOne(wc.y), convertOne(wc.z));
     }
 
-    WorldCoord convertToWorld (InnerChunkCoord const& ic, OuterChunkCoord const& oc) {
+    static WorldCoord convertToWorld (InnerChunkCoord const& ic, OuterChunkCoord const& oc) {
         auto convertOne = [] (const int i, const int o) -> int {
-            return o + i * size;
+            return i + o * size;
         };
 
         return WorldCoord(convertOne(ic.x,oc.x), convertOne(ic.y, oc.y), convertOne(ic.z, oc.z));
     }
-
-
 
     struct BlockType {
         unsigned value;
@@ -73,8 +71,8 @@ public:
 
     class Chunk {
         std::array<BlockType, size*size*size> data;
-
         void _generate(int cx, int cy, int cz);
+
     public:
         BlockType& access (InnerChunkCoord const& c) {
             return data[c.x + c.y * size + c.z * size * size];
@@ -98,6 +96,7 @@ public:
     unsigned getSize () const { return size; }
 
     BlockType get(int x, int y, int z);
+    BlockType get(WorldCoord const& coord);
     void set(int x, int y, int z, unsigned value);
 
     /*auto getChunks () -> decltype(data | boost::adaptors::map_values) {
@@ -115,12 +114,12 @@ public:
 
 template<typename Tag>
 bool operator<(Minefield::Coord<Tag> const& a, Minefield::Coord<Tag> const& b) {
-        if (a.x != b.x)
-            return a.x < b.x;
-        else if (a.y != b.y)
-            return a.y < b.y;
-        else
-            return a.z < b.z;
+    if (a.x != b.x)
+        return a.x < b.x;
+    else if (a.y != b.y)
+        return a.y < b.y;
+    else
+        return a.z < b.z;
 }
 
 template<typename Tag>

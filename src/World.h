@@ -13,10 +13,31 @@ class World
     Minefield field;
     // rendering
     std::shared_ptr<engine::Program> shader;
-    engine::VertexAttributeArray vao;
-    engine::VertexBuffer positionVbo, texcoordVbo, normalVbo;
 
-    unsigned visibleCubesCount;
+    struct DisplayChunk {
+        unsigned visibleWallsCount;
+        engine::VertexAttributeArray vao;
+        engine::VertexBuffer positionVbo, texcoordVbo, normalVbo;
+        Minefield::OuterChunkCoord coord;
+        static const int size = Minefield::size;
+
+        void draw();
+
+        // I hate Visual Studio compiler.
+        DisplayChunk (DisplayChunk&& other) :
+            visibleWallsCount(other.visibleWallsCount),
+            vao(std::move(other.vao)),
+            positionVbo(std::move(other.positionVbo)),
+            texcoordVbo(std::move(other.texcoordVbo)),
+            normalVbo(std::move(other.normalVbo)),
+            coord(std::move(other.coord))
+        { }
+        DisplayChunk (Minefield::OuterChunkCoord c);
+    };
+
+    std::map<Minefield::OuterChunkCoord, DisplayChunk> displayChunks;
+
+    void _recalcChunk(DisplayChunk & dc);
 
 public:
     void init();
@@ -39,4 +60,3 @@ public:
 
     World(std::shared_ptr<engine::Program> shader);
 };
-
