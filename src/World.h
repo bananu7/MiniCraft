@@ -16,6 +16,7 @@ class World
 
     struct DisplayChunk {
         unsigned visibleWallsCount;
+        bool needsRecalc;
         engine::VertexAttributeArray vao;
         engine::VertexBuffer positionVbo, texcoordVbo, normalVbo;
         Minefield::OuterChunkCoord coord;
@@ -30,7 +31,8 @@ class World
             positionVbo(std::move(other.positionVbo)),
             texcoordVbo(std::move(other.texcoordVbo)),
             normalVbo(std::move(other.normalVbo)),
-            coord(std::move(other.coord))
+            coord(std::move(other.coord)),
+            needsRecalc(true)
         { }
         DisplayChunk (Minefield::OuterChunkCoord c);
     };
@@ -41,22 +43,20 @@ class World
 
 public:
     void init();
-    void recalcInstances();
+    void recalcInstances(bool forceFullRecalc = false);
     void draw();
 
-    struct CubePos { int x, y, z; CubePos(int _x, int _y, int _z) : x(_x), y(_y), z(_z) {} };
-
-    void set(CubePos const& pos, int val) { field.set(pos.x, pos.y, pos.z, val); }
+    void set(Minefield::WorldCoord const& pos, int val);
 
     enum RayCastParams {
         STOP_ON_FIRST = 1, // stop on first nonzero cube hit
         INCLUDE_EMPTY = 2, // include empty(zero) cubes traversed in the results
         INCLUDE_FIRST = 4  // include the starting cube at the beggining of the result
     };
-    std::vector<CubePos> raycast(glm::vec3 const& start, glm::vec3 const& normal, float l, int stopOnFirstHit);
+    std::vector<Minefield::WorldCoord> raycast(glm::vec3 const& start, glm::vec3 const& normal, float l, int stopOnFirstHit);
 
     void saveToFile (std::string const& path) const { field.saveToFile(path); }
-    void loadFromFile (std::string const& path) { field.loadFromFile(path); recalcInstances(); }
+    void loadFromFile (std::string const& path) { field.loadFromFile(path); recalcInstances(true); }
 
     World(std::shared_ptr<engine::Program> shader);
 };

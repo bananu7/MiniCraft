@@ -160,15 +160,34 @@ void World::_recalcChunk(World::DisplayChunk & c) {
     c.positionVbo.LoadData(Positions.data(), Positions.size() * sizeof(glm::vec3));
     c.texcoordVbo.LoadData(Texcoords.data(), Texcoords.size() * sizeof(glm::vec2));
     c.normalVbo.LoadData(Normals.data(), Normals.size() * sizeof(glm::vec3));
+
+    c.needsRecalc = false;
 }
 
-void World::recalcInstances()
+void World::set(Minefield::WorldCoord const& pos, int val) {
+    field.set(pos.x, pos.y, pos.z, val);
+    auto oc = Minefield::convertToOuter(pos);
+    auto dcIt = displayChunks.find(oc);
+    if (dcIt != displayChunks.end())
+        dcIt->second.needsRecalc = true;
+    else {
+        DisplayChunk dc(oc);
+        _recalcChunk(dc);
+        displayChunks.insert(std::make_pair(oc, std::move(dc)));
+    }
+
+}
+
+void World::recalcInstances(bool force)
 {
     // specify data
     for (auto const& chunk : field.getChunks()) {
         auto dcIt = displayChunks.find(chunk.first);
-        if (dcIt != displayChunks.end())
-            _recalcChunk(dcIt->second);
+        if (dcIt != displayChunks.end()) {
+            if (dcIt->second.needsRecalc || force) {
+                _recalcChunk(dcIt->second);
+            }
+        }
         else {
             DisplayChunk dc(chunk.first);
             _recalcChunk(dc);
@@ -186,14 +205,15 @@ void World::draw()
         BREAKPOINT();
 
     shader->Bind();
-    for (auto & chunk : displayChunks) 
+    for (auto & chunk : displayChunks) {
         chunk.second.draw();
+    }
 }
 
 #include <fstream>
 #include <boost/test/utils/nullstream.hpp>
 
-std::vector<World::CubePos> World::raycast(glm::vec3 const& pos, glm::vec3 const& normal, float len, int raycastParams)
+std::vector<Minefield::WorldCoord> World::raycast(glm::vec3 const& pos, glm::vec3 const& normal, float len, int raycastParams)
 {
     double x = pos.x, y = pos.y, z = pos.z;
     const double nx = normal.x, ny = normal.y, nz = normal.z;
@@ -201,7 +221,7 @@ std::vector<World::CubePos> World::raycast(glm::vec3 const& pos, glm::vec3 const
     std::ofstream Log("raycast.txt");
     //boost::onullstream Log;
 
-    std::vector<World::CubePos> Results;
+    std::vector<Minefield::WorldCoord> Results;
 
     Log << "------BEGIN RAYCAST--------\n";
     Log << "Initial data:\n"
@@ -247,7 +267,7 @@ std::vector<World::CubePos> World::raycast(glm::vec3 const& pos, glm::vec3 const
     current_z = (z > 0.f) ? static_cast<int>(z) : static_cast<int>(z - 1.f);
 
     if (raycastParams & INCLUDE_FIRST)
-        Results.push_back(CubePos(current_x, current_y, current_z));
+        Results.push_back(Minefield::WorldCoord(current_x, current_y, current_z));
 
     Log << "Starting cube : " << current_x << " " << current_y << " " << current_z << '\n';
 
@@ -331,7 +351,7 @@ std::vector<World::CubePos> World::raycast(glm::vec3 const& pos, glm::vec3 const
         auto currentVal = field.get(current_x, current_y, current_z);
         if ((currentVal.value != 0) || (raycastParams & INCLUDE_EMPTY))
         {
-            Results.push_back(World::CubePos(current_x, current_y, current_z));
+            Results.push_back(Minefield::WorldCoord(current_x, current_y, current_z));
             if ((raycastParams & STOP_ON_FIRST) && (currentVal.value != 0))
                 break;
         }
