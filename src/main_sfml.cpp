@@ -237,7 +237,7 @@ int WINAPI WinMain (HINSTANCE hInstance,
 int main()
 #endif
 {
-    sf::Window window(sf::VideoMode(ScreenXSize, ScreenYSize), "Minicraft v0.2", 7, sf::ContextSettings(24, 0, 0, 3, 3));
+    sf::Window window(sf::VideoMode(ScreenXSize, ScreenYSize), "Minicraft v0.3", 7, sf::ContextSettings(24, 0, 0, 3, 3));
 
     window.setMouseCursorVisible(false);
 
@@ -385,6 +385,7 @@ int main()
             Camera.CalculateView();	
             glm::mat4 View = Camera.GetViewMat();
             shader->SetUniform("View", View);
+            shader->SetUniform("Eye", Camera.Position);
 
             // world (cubes)
             image.Bind(0);
