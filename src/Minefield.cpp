@@ -97,16 +97,16 @@ void Minefield::Chunk::_generate(int cx, int cy, int cz) {
         }
     }
     else if (cy < 0) {
-        for (unsigned x = 0; x < size; ++x) {
-            for (unsigned y = 0; y < size; ++y) {
-                for (unsigned z = 0; z < size; ++z) {
+        for (int x = 0; x < size; ++x) {
+            for (int y = 0; y < size; ++y) {
+                for (int z = 0; z < size; ++z) {
                         // 3D version
-                    float xf = float(cx * size + x) / (size * 3);
-                    float yf = -float(cy * size + y) / (size * 3);	
-                    float zf = float(cz * size + z) / (size * 3);
-                
+                    float xf = abs(float(cx * size + x) / (size));
+                    float yf = abs(float(cy * size + y) / (size));
+                    float zf = abs(float(cz * size + z) / (size));
+
                     double value = simplex_noise(1, xf*3, yf*3, zf*3);
-                    unsigned block = (value > 1.1) ? 0 : 2;
+                    unsigned block = (value > 1.1) ? 2 : 0;
 
                     _access(x, y, z).value = block; // stone
                 }
