@@ -138,22 +138,12 @@ void World::_recalcChunk(World::DisplayChunk & c) {
                     // Add frustum culling here?
 
                     // Generate output vertices into VBOs
-                  
-                    static const int xOff [] = { 0, 1, 0, -1, 0, 0 };
-                    static const int yOff [] = { 0, 0, 0, 0, 1, -1 };
-                    static const int zOff [] = { 1, 0, -1, 0, 0, 0 };
-
                     // 6 walls
                     for (unsigned wall = 0; wall < 6; ++wall) {
                         //check if the wall is obscured
-
-                        int neighVal = field.get(c.coord.x * c.size + x + xOff[wall],
-                                                 c.coord.y * c.size + y + yOff[wall],
-                                                 c.coord.z * c.size + z + zOff[wall]).value;
-                        if (neighVal == 0) {
+                        if (!(block.neighbors[wall])) {
                             // Each wall has two triangles
                             for (int t = 0; t < 6; ++t) {
-
                                 unsigned vert_num = Walls[t + wall * 6];
                                 Positions.push_back(Verts[vert_num] + glm::vec3(x,y,z) + chunkOffset);
 

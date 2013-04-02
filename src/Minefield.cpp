@@ -15,7 +15,7 @@ Minefield::BlockType Minefield::get(Minefield::WorldCoord const& wc) {
 
     if (it != data.end()) {
         auto ic = convertToInner(wc);
-        return it->second.access(ic);
+        return it->second.get(ic);
     }
     else
         return BlockType();
@@ -29,7 +29,7 @@ void Minefield::set(const int x, const int y, const int z, unsigned value) {
     InnerChunkCoord ic = convertToInner(wc);
 
     if (it != data.end()) {
-        it->second.access(ic).value = value;
+        it->second.set(ic, value);
     }
     else {		
         auto result = data.insert(make_pair(oc, Chunk(oc)));
@@ -40,7 +40,7 @@ void Minefield::set(const int x, const int y, const int z, unsigned value) {
         // is another pair in this case.
 
         if (result.second)
-            result.first->second.access(ic).value = value;
+            result.first->second.set(ic, value);
     }
 }
 
@@ -57,19 +57,6 @@ Minefield::Minefield() {
 }
 
 void Minefield::Chunk::_generate(int cx, int cy, int cz) {
-    // 3D version
-    /*for (unsigned x = 0; x < size; ++x)
-        for (unsigned y = 0; y < size; ++y)
-            for (unsigned z = 0; z < size; ++z)
-            {
-                float xf = float(x)/size;
-                float yf = float(y)/size;	
-                float zf = float(z)/size;
-                double value = simplex_noise(1, xf*3, yf*3, zf*3);
-                set(x, y, z, (value > 1.1) ? 6 : 0);
-            }
-    */
-
     // 2D version
 
     if (cx < 0) cx *= -1;
@@ -103,9 +90,9 @@ void Minefield::Chunk::_generate(int cx, int cy, int cz) {
                     else
                         block = 67;
 
-                    access(InnerChunkCoord(x, i, z)).value = block;
+                    _access(x, i, z).value = block;
                 }
-                access(InnerChunkCoord(x, 0, z)).value = 1;
+                _access(x, 0, z).value = 1;
             }
         }
     }
@@ -113,7 +100,15 @@ void Minefield::Chunk::_generate(int cx, int cy, int cz) {
         for (unsigned x = 0; x < size; ++x) {
             for (unsigned y = 0; y < size; ++y) {
                 for (unsigned z = 0; z < size; ++z) {
-                    access(InnerChunkCoord(x, y, z)).value = 2; // stone
+                        // 3D version
+                    float xf = float(cx * size + x) / (size * 3);
+                    float yf = -float(cy * size + y) / (size * 3);	
+                    float zf = float(cz * size + z) / (size * 3);
+                
+                    double value = simplex_noise(1, xf*3, yf*3, zf*3);
+                    unsigned block = (value > 1.1) ? 0 : 2;
+
+                    _access(x, y, z).value = block; // stone
                 }
             }
         }
@@ -121,6 +116,8 @@ void Minefield::Chunk::_generate(int cx, int cy, int cz) {
     /*else {
         // Leave the array default-initialized to 0
     }*/
+
+    _generateCache();
 }
 
 // Serialization
@@ -202,6 +199,30 @@ void Minefield::saveToFile(std::string const& path) const {
         file.write((const char*)(&ch), sizeof(ch));
 
         serializeChunk(v.second);
+    }
+}
+
+ void Minefield::Chunk::_generateCache() { 
+    for (unsigned x = 1; x < size-1; ++x) {
+        for (unsigned y = 1; y < size-1; ++y) {
+            for (unsigned z = 1; z < size-1; ++z) {
+                // check all 6 walls
+                static const int xOff [] = { 0, 1, 0, -1, 0, 0 };
+                static const int yOff [] = { 0, 0, 0, 0, 1, -1 };
+                static const int zOff [] = { 1, 0, -1, 0, 0, 0 };
+
+                // 6 walls
+                for (unsigned wall = 0; wall < 6; ++wall) {
+                    //check if the wall is obscured
+
+                    int neighVal = get(InnerChunkCoord(x + xOff[wall],
+                                                       y + yOff[wall],
+                                                       z + zOff[wall])).value;
+                    // true if it has a neighbor on said wall
+                    _access(x,y,z).neighbors[wall] = (neighVal != 0);
+                }
+            }
+        }
     }
 }
 

@@ -64,22 +64,39 @@ public:
         unsigned value;
         // TEMP - only the facing direction
         unsigned char orientation;
+        std::array<bool, 6> neighbors;
 
         BlockType(unsigned _value = 0, unsigned char _orientation = 0) 
-            : value(_value), orientation(_orientation) { }
+            : value(_value), orientation(_orientation) { /*default all are visible*/ for (auto& n : neighbors) n = false; }
     };
 
     class Chunk {
         std::array<BlockType, size*size*size> data;
         void _generate(int cx, int cy, int cz);
+        void _generateCache();
 
+        BlockType& _access (int x, int y, int z) { return data[x + y * size + z * size * size]; };
     public:
-        BlockType& access (InnerChunkCoord const& c) {
+
+        enum Neighbor { 
+            Front = 0, Right = 1, Back = 2, Left = 3, Top = 4, Bottom = 5
+        };
+
+        void set (InnerChunkCoord const& c, unsigned bvalue) {
+            _access(c.x, c.y, c.z) = bvalue;
+            
+            // notify the neighbors
+            if (c.x > 0) _access(c.x-1, c.y, c.z).neighbors[Neighbor::Right] = (bvalue != 0);
+            if (c.x < size-1) _access(c.x+1, c.y, c.z).neighbors[Neighbor::Left] = (bvalue != 0);
+            if (c.y > 0) _access(c.x, c.y-1, c.z).neighbors[Neighbor::Top] = (bvalue != 0);
+            if (c.y < size-1) _access(c.x, c.y+1, c.z).neighbors[Neighbor::Bottom] = (bvalue != 0);
+            if (c.z > 0) _access(c.x, c.y, c.z-1).neighbors[Neighbor::Front] = (bvalue != 0);
+            if (c.z < size-1) _access(c.x, c.y, c.z+1).neighbors[Neighbor::Back] = (bvalue!= 0);
+        }
+        BlockType const& get (InnerChunkCoord const& c) const {
             return data[c.x + c.y * size + c.z * size * size];
         }
-        BlockType const& access (InnerChunkCoord const& c) const {
-            return data[c.x + c.y * size + c.z * size * size];
-        }
+
         Chunk () { }
         Chunk (OuterChunkCoord const& ccoords);
 
