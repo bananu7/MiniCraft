@@ -27,6 +27,12 @@ if platform.system() == 'Windows':
         engine_path + "dependencies/pugixml-1.2/src/",
         boost_path,
     ])
+    
+    env.Append(LIBS=[
+        "winmm", 
+        "wininet",
+        "gdi32"
+    ])
 else:
     env = Environment(ENV = os.environ)
 
@@ -36,21 +42,21 @@ env.Append(CPPDEFINES="SFML_STATIC")
 env.Append(CPPDEFINES="GLEW_STATIC")
 
 env.Append(CPPPATH= engine_path + "Engine/include/")
-# SFML is compiled from sources, so we need to add it
 env.Append(CPPPATH= engine_path + "dependencies/SFML-2.0/include/")
 
 # TODO : add Debug here
 env.Append(LIBPATH=[
     engine_path,
-    engine_path + "dependencies/glew-1.9.0/lib/",
-    engine_path + "dependencies/pugixml-1.2/lib/",
+    engine_path + "dependencies/FreeImage/Dist/",
 ])
 
-cpp_files = Glob("src/*.cpp")
-exe = env.Program(target='Minicraft', source = cpp_files, LIBS=[
+env.Prepend(LIBS=[
 'Engine',
 'SFML',
 'opengl32',
-'glew32',
+'FreeImage',
 ])
+
+cpp_files = Glob("src/*.cpp")
+exe = env.Program(target='Minicraft', source = cpp_files)
 
