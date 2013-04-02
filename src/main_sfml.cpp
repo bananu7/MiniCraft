@@ -295,9 +295,10 @@ int main()
 
     // temporary test lines
     // x-line
-    /*for (int i = -20; i < 20; i++) {
-        w.set(World::CubePos(1, i, 1), 2);
-    }*/
+    for (int j = -20; j < 20; ++j)
+        for (int i = -20; i < 20; ++i) {
+            w.set(Minefield::WorldCoord(i, 1, j), 2);
+        }
 
     /*// y-line
     for (int i = -2; i < 5; i++) {
@@ -410,6 +411,8 @@ int main()
             glm::mat4 RMatrix = engine::Camera::CreateRotation(Camera.LookDir.x, Camera.LookDir.y, 0.f);
             glm::vec3 NormV (RMatrix[0].z, RMatrix[1].z, RMatrix[2].z);
             NormV *= -1.f;
+
+            mainTexture.bind(1);
         
             auto result = w.raycast(Camera.Position, NormV, 50.f, World::STOP_ON_FIRST);
             if (!result.empty()) {

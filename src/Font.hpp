@@ -42,8 +42,10 @@ class Font {
         NL "uniform mat4 Projection;"
         NL "uniform vec2 Position;"
         NL "out vec2 var_tc;"
+        NL "out vec2 var_accumTc;"
         NL "void main() {"
         NL "    var_tc = in_texcoord;"
+        NL "    var_accumTc = vec2((Position.x + in_offset.x)/1280.0, (1-(Position.y + in_offset.y))/800.0);"
         NL "    vec2 pos = Position + in_offset;"
         NL "    gl_Position = Projection * vec4(pos, 0.0, 1.0);"
         NL "}" NL;
@@ -51,11 +53,12 @@ class Font {
         std::string frag = 
         "#version 330 core"
         NL "out vec4 out_Color;"
+        NL "in vec2 var_accumTc;"
         NL "in vec2 var_tc;"
         NL "uniform sampler2D tex;"
         NL "uniform sampler2D accum;"
         NL "void main () {"
-        NL "    out_Color = vec4(texture(tex, var_tc).rgb, 1.0);"
+        NL "    out_Color = (1 - vec4(texture(tex, var_tc).rgb, 1.0)) * vec4(texture(accum, var_accumTc).rgb, 1.0);"
         //NL "    out_Color = vec4(0.0, 1.0, 0.0, 1.0);"
         //NL "    out_Color = vec4(var_tc, 0.0, 1.0);"
         NL "}" NL;
@@ -82,6 +85,7 @@ class Font {
         auto status = program.Link();
         program.Bind();
         program.SetTex("tex", 0);
+        program.SetTex("accum", 1);
 
         try {
             if (!status.empty())

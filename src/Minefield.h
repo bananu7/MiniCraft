@@ -5,7 +5,7 @@
 class Minefield
 {
 public:
-    static const int size = 12;
+    static const int size = 24;
 
     struct WorldCoordTag;
     struct OuterChunkCoordTag;
