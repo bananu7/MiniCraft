@@ -5,7 +5,7 @@ void Texture<TextureType::Texture_1D>::imageData(
     unsigned width,
     unsigned height,
     TextureFormat format,
-    TextureFormat internalFormat,
+    TextureInternalFormat internalFormat,
     TextureDataType dataType,
     const void* data)
 {
@@ -25,7 +25,7 @@ void Texture<TextureType::Texture_2D>::imageData(
     unsigned width,
     unsigned height,
     TextureFormat format,
-    TextureFormat internalFormat,
+    TextureInternalFormat internalFormat,
     TextureDataType dataType,
     const void* data)
 {
@@ -47,7 +47,7 @@ void Texture<TextureType::Texture_3D>::imageData(
     unsigned width,
     unsigned height,
     TextureFormat format,
-    TextureFormat internalFormat,
+    TextureInternalFormat internalFormat,
     TextureDataType dataType,
     const void* data)
 {

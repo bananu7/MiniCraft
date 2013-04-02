@@ -21,6 +21,14 @@ enum class FilteringMode : GLint {
     NearestMipmapNearest = GL_NEAREST_MIPMAP_NEAREST
 };
 
+enum class TextureInternalFormat : GLenum {
+    RGBA = GL_RGBA,
+    RGB = GL_RGB,
+    SRGB = GL_SRGB8,
+    SRGBA = GL_SRGB8_ALPHA8,
+    Depth = GL_DEPTH_COMPONENT
+};
+
 enum class TextureFormat : GLenum {
     RGBA = GL_RGBA,
     RGB = GL_RGB,
@@ -56,7 +64,7 @@ public:
         glTexParameteri(static_cast<GLenum>(type), static_cast<GLenum>(direction), static_cast<GLint>(mode));
     }
 
-    void imageData(unsigned width, unsigned height, TextureFormat format, TextureFormat internalFormat, TextureDataType dataType, const void* data);
+    void imageData(unsigned width, unsigned height, TextureFormat format, TextureInternalFormat internalFormat, TextureDataType dataType, const void* data);
 
     GLuint getId() const { return id; }
 

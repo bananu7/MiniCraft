@@ -28,6 +28,12 @@ public:
         Coord(int _x, int _y, int _z)
             : x(_x), y(_y), z(_z) {
         }
+
+        void operator+= (Coord const& other) {
+            x += other.x;
+            y += other.y;
+            z += other.z;
+        }
     };
 
     static OuterChunkCoord convertToOuter (WorldCoord const& wc) {

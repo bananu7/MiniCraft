@@ -17,6 +17,7 @@
     <ClInclude Include="src\helpers.hpp" />
     <ClInclude Include="src\Line.hpp" />
     <ClInclude Include="src\Minefield.h" />
+    <ClInclude Include="src\Player.h" />
     <ClInclude Include="src\simplex.h" />
     <ClInclude Include="src\Texture.hpp" />
     <ClInclude Include="src\World.h" />

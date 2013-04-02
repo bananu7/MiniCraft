@@ -75,6 +75,7 @@ void init()
     glEnable(GL_CULL_FACE);
 
     glEnable(GL_TEXTURE_2D);
+    glEnable(GL_FRAMEBUFFER_SRGB);
 }
 
 void initShadersEngine()
@@ -135,7 +136,7 @@ void initResources()
             throw std::runtime_error("File not open");
 
         // I prefer the shorter version
-        image = engine::Image::Load(istreambuf_range<unsigned char>(file));
+        image = engine::Image::Load(istreambuf_range<unsigned char>(file), true);
         //image = engine::Image::Load(boost::make_iterator_range(std::istreambuf_iterator<unsigned char>(file),
         //													   std::istreambuf_iterator<unsigned char>()));
     }
@@ -278,13 +279,14 @@ int main()
     mainTexture.bind(0);
     mainTexture.setFiltering(FilteringDirection::Minification, FilteringMode::Nearest);
     mainTexture.setFiltering(FilteringDirection::Magnification, FilteringMode::Nearest);
-    mainTexture.imageData(ScreenXSize, ScreenYSize, TextureFormat::RGBA, TextureFormat::RGBA, TextureDataType::UnsignedByte, nullptr);
+    //mainTexture.imageData(ScreenXSize, ScreenYSize, TextureFormat::RGBA, TextureInternalFormat::SRGBA, TextureDataType::UnsignedByte, nullptr);
+    mainTexture.imageData(ScreenXSize, ScreenYSize, TextureFormat::RGBA, TextureInternalFormat::RGBA, TextureDataType::Float, nullptr);
 
     Texture<TextureType::Texture_2D> depthTexture;
     depthTexture.bind();
     depthTexture.setFiltering(FilteringDirection::Minification, FilteringMode::Nearest);
     depthTexture.setFiltering(FilteringDirection::Magnification, FilteringMode::Nearest);
-    depthTexture.imageData(ScreenXSize, ScreenYSize, TextureFormat::Depth, TextureFormat::Depth, TextureDataType::Float, nullptr);
+    depthTexture.imageData(ScreenXSize, ScreenYSize, TextureFormat::Depth, TextureInternalFormat::Depth, TextureDataType::Float, nullptr);
 
     engine::Framebuffer mainFbo;
     mainFbo.AttachTexture(GL_TEXTURE_2D, mainTexture.getId());
