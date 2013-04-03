@@ -26,6 +26,7 @@
 #include "Texture.hpp"
 #include "Console.hpp"
 #include "helpers.hpp"
+#include "Player.h"
 
 #ifdef MINICRAFT_WINDOWS
     #include <Windows.h>
@@ -65,6 +66,7 @@ void CheckForGLError()
 Line* g_L;
 bool g_Run = true;
 bool consoleOn = false;
+std::unique_ptr<Player> player;
 
 void init()
 {
@@ -168,10 +170,15 @@ void keyboard()
 
     if (keys[sf::Keyboard::S])
         Camera.Fly(-0.2f);
-    if (keys[sf::Keyboard::W])
-        Camera.Fly(0.2f);
-    if (keys[sf::Keyboard::Space])
-        Camera.Position.y += 0.2f;
+    if (keys[sf::Keyboard::W]) {
+        //Camera.Fly(0.2f);
+        player->move();
+    }
+    if (keys[sf::Keyboard::Space]) {
+        //Camera.Position.y += 0.2f;
+        player->jump();
+        keys[sf::Keyboard::Space] = false;
+    }
     if (keys[sf::Keyboard::C])
         Camera.Position.y -= 0.2f;
 
@@ -188,7 +195,7 @@ void keyboard()
             w.recalcInstances();
         }
 
-        g_L->set(Camera.Position, Camera.Position + NormV * 50.f);
+        g_L->set(Camera.Position, Camera.Position + NormV * 30.f);
         keys[sf::Keyboard::R] = false;
     }
     if (keys[sf::Keyboard::T]) // add
@@ -205,7 +212,7 @@ void keyboard()
             w.recalcInstances();
         }*/
 
-        auto result = w.raycast(Camera.Position, NormV, 50.f,
+        auto result = w.raycast(Camera.Position, NormV, 30.f,
             World::INCLUDE_EMPTY | World::INCLUDE_FIRST);
 
         for(auto const & c :result){
@@ -256,11 +263,16 @@ int main()
     L[1].set(glm::vec3(-0.05f, 0.f, 0.f), glm::vec3(0.05f, 0.f, 0.f));
     L[2].set(glm::vec3(-0.05f, 0.f, 0.f), glm::vec3(0.05f, 0.f, 0.f));
 
+    Camera.Position.y += 20.f;
+
     Font font;
+    player = std::unique_ptr<Player>(new Player([](Minefield::WorldCoord const& wc) {
+        return (w.get(wc).value) ? false : true;
+    }));
+    player->setPosition(Camera.Position);
+    player->setDirection(Camera.LookDir);
 
     FullscreenQuad fq;
-
-    Camera.Position.y += 10.f;
 
     Console console(glm::ivec2(80, 4));
     console.setCallback([&console](std::string const& s){
@@ -297,9 +309,9 @@ int main()
 
     // temporary test lines
     // x-line
-    for (int j = -20; j < 20; ++j)
-        for (int i = -20; i < 20; ++i) {
-            w.set(Minefield::WorldCoord(i, 1, j), 2);
+    for (int j = -1; j < 1; ++j)
+        for (int i = -1; i < 1; ++i) {
+            w.set(Minefield::WorldCoord(i*24, 1, j*24), 2);
         }
 
     /*// y-line
@@ -365,6 +377,13 @@ int main()
             break;
         }
 
+        // updates:
+        player->gravity();
+        Camera.Position = player->getPosition();
+        // compensate for eye height
+        Camera.Position.y += 1.5f;
+        player->setDirection(Camera.LookDir);
+
         if (active)
         {
             keyboard();
@@ -417,13 +436,21 @@ int main()
 
             mainTexture.bind(1);
         
-            auto result = w.raycast(Camera.Position, NormV, 50.f, World::STOP_ON_FIRST);
+            auto result = w.raycast(Camera.Position, NormV, 20.f, World::STOP_ON_FIRST);
             if (!result.empty()) {
                 std::stringstream s;
                 s << "[" << result.back().x << ", " << result.back().y << ", " << result.back().z << "]";
                 font.draw(s.str(), glm::vec2(10.f, 10.f));
             } else
                 font.draw("no target", glm::vec2(10.f, 10.f));
+
+            //player position 
+            {
+                std::stringstream s;
+                glm::vec3 pp = player->getPosition();
+                s << "[" << pp.x << ", " << pp.y << ", " << pp.z << "]";
+                font.draw(s.str(), glm::vec2(10.f, 30.f));
+            }
 
             /*font.draw("ABCDEFGHIJKLMNOPQRSTUVWXYZ", glm::vec2(20.f, 20.f));
             font.draw("abcdefghijklmnopqrstuvwxyz", glm::vec2(20.f, 50.f));

@@ -64,14 +64,14 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\PROJECTS\Engine\Engine\include;C:\DEV\freeglut\include;C:\PROJECTS\Engine\dependencies\glm-0.9.4.1;C:\PROJECTS\Engine\dependencies\pugixml-1.2\src;C:\PROJECTS\Engine\dependencies\SFML-2.0\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\PROJECTS\Engine\Debug;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\PROJECTS\Engine\Engine\include;C:\PROJECTS\Engine\dependencies\glm-0.9.4.1;C:\PROJECTS\Engine\dependencies\pugixml-1.2\src;C:\PROJECTS\Engine\dependencies\SFML-2.0\include;C:\PROJECTS\MiniCraft\deps\mNBT\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\PROJECTS\Engine\Debug;C:\PROJECTS\MiniCraft\deps\mNBT\Debug;$(LibraryPath)</LibraryPath>
     <IntDir>$(Configuration)\intermediate\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\PROJECTS\Engine\Engine\include;C:\DEV\freeglut\include;C:\PROJECTS\Engine\dependencies\glm-0.9.4.1;C:\PROJECTS\Engine\dependencies\pugixml-1.2\src;C:\PROJECTS\Engine\dependencies\SFML-2.0\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\PROJECTS\Engine\Release;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\PROJECTS\Engine\Engine\include;C:\PROJECTS\Engine\dependencies\glm-0.9.4.1;C:\PROJECTS\Engine\dependencies\pugixml-1.2\src;C:\PROJECTS\Engine\dependencies\SFML-2.0\include;C:\PROJECTS\MiniCraft\deps\mNBT\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\PROJECTS\Engine\Release;C:\PROJECTS\MiniCraft\deps\mNBT;$(LibraryPath)</LibraryPath>
     <IntDir>$(Configuration)\intermediate\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -80,7 +80,7 @@
       </PrecompiledHeader>
       <WarningLevel>EnableAllWarnings</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;SFML_STATIC;GLEW_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;SFML_STATIC;GLEW_STATIC;ZLIB_WINAPI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Cpp0xSupport>true</Cpp0xSupport>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
       <LevelOfStaticAnalysis>None</LevelOfStaticAnalysis>
@@ -91,7 +91,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>opengl32.lib;Engine.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;Engine.lib;mNBT.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>msvcrt</IgnoreSpecificDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
@@ -112,7 +112,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>opengl32.lib;Engine.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;Engine.lib;mNBT.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

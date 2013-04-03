@@ -5,12 +5,17 @@
 #include <fstream>
 #include <cstdint>
 
+/*#include "NBTFile.hpp"
+#include "RegionLoader.hpp"*/
+
 using std::make_pair;
 
-Minefield::BlockType Minefield::get(const int x, const int y, const int z) {
+Minefield::BlockType const& Minefield::get(const int x, const int y, const int z) {
     return get(WorldCoord(x,y,z));
 }
-Minefield::BlockType Minefield::get(Minefield::WorldCoord const& wc) {
+Minefield::BlockType const& Minefield::get(Minefield::WorldCoord const& wc) {
+    static BlockType empty;
+
     auto it = data.find(convertToOuter(wc));
 
     if (it != data.end()) {
@@ -18,7 +23,7 @@ Minefield::BlockType Minefield::get(Minefield::WorldCoord const& wc) {
         return it->second.get(ic);
     }
     else
-        return BlockType();
+        return empty;
 }
 
 void Minefield::set(const int x, const int y, const int z, unsigned value) {
@@ -65,14 +70,15 @@ void Minefield::Chunk::_generate(int cx, int cy, int cz) {
     if (cy == 0) {
         for (unsigned x = 0; x < size; ++x) {
             for (unsigned z = 0; z < size; ++z) {
-                float xf = float(cx * size + x) / (size * 3);
-                float zf = float(cz * size + z) / (size * 3);
+                float xf = float(cx * size + x) / (size * 6.0);
+                float zf = float(cz * size + z) / (size * 6.0);
 
                 double value = simplex_noise(1, xf*3, zf*3);
 
                 //compress the range a bit:
-                value *= 0.3;
-                value += 0.4;
+                value *= 0.7;
+                value += 0.2;
+                if (value > 1.) value = 1.;
 
                 int h = value * size;
 
@@ -92,7 +98,7 @@ void Minefield::Chunk::_generate(int cx, int cy, int cz) {
 
                     _access(x, i, z).value = block;
                 }
-                _access(x, 0, z).value = 1;
+                _access(x, 0, z).value = 19;
             }
         }
     }
@@ -139,6 +145,32 @@ struct ChunkHeader {
     int32_t chunkPositionY;
     int32_t chunkPositionZ;
 };
+
+/*void loadFromNBT () {
+    try {
+        mNBT::RegionLoader* loader;
+        mNBT::Tag* temp;
+        for (int x = 0; x > -2; x--)
+            for (int z = 0; z > -2; z--) {
+                loader = new mNBT::RegionLoader("world",x,z);
+                for (int x1 = 0; x1 < 32; x1++)
+                    for (int z1 = 0; z1 < 32; z1++) {
+                        temp = loader->getChunk(x1,z1);
+                        if(x1 == 0 || x1 == 31) {
+                            delete temp;
+                            temp = loader->getEmptyChunkNBT(x1,z1);
+                        }
+                        loader->putChunk(temp,x1,z1);
+                        delete temp;
+                    }
+                loader->save();
+                delete loader;
+            }
+    } catch (mNBT::NBTErr error) {
+        //std::cerr << "Error: " << error.getReason();
+        throw;
+    }
+}*/
 
 void Minefield::loadFromFile(std::string const& path) {
     std::ifstream file(path, std::ios::binary);

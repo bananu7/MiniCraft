@@ -47,6 +47,7 @@ public:
     void draw();
 
     void set(Minefield::WorldCoord const& pos, int val);
+    Minefield::BlockType const& get(Minefield::WorldCoord const& pos) { return field.get(pos); }
 
     enum RayCastParams {
         STOP_ON_FIRST = 1, // stop on first nonzero cube hit

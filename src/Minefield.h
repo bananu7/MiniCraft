@@ -118,8 +118,8 @@ private:
 public:
     unsigned getSize () const { return size; }
 
-    BlockType get(int x, int y, int z);
-    BlockType get(WorldCoord const& coord);
+    BlockType const& get(int x, int y, int z);
+    BlockType const& get(WorldCoord const& coord);
     void set(int x, int y, int z, unsigned value);
 
     /*auto getChunks () -> decltype(data | boost::adaptors::map_values) {
@@ -148,4 +148,11 @@ bool operator<(Minefield::Coord<Tag> const& a, Minefield::Coord<Tag> const& b) {
 template<typename Tag>
 bool operator==(Minefield::Coord<Tag> const& a, Minefield::Coord<Tag> const& b) {
     return (a.x==b.x && a.y==b.y && a.z==b.z);
+}
+
+template<typename Tag>
+Minefield::Coord<Tag> operator+ (Minefield::Coord<Tag> const& a, Minefield::Coord<Tag> const& b) {
+    Minefield::Coord<Tag> temp (a);
+    temp += b;
+    return temp;
 }
