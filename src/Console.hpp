@@ -4,8 +4,8 @@
 #include <deque>
 
 class Console {
-    Console(Console const&) = delete;
-    Console& operator= (Console const&) = delete;
+    Console(Console const&)/* = delete*/;
+    Console& operator= (Console const&)/* = delete*/;
 
     glm::ivec2 cursor;
     glm::ivec2 bufferSize;

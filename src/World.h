@@ -10,10 +10,6 @@ namespace engine { class Program; }
 
 class World
 {
-    Minefield field;
-    // rendering
-    std::shared_ptr<engine::Program> shader;
-
     struct DisplayChunk {
         unsigned visibleWallsCount;
         bool needsRecalc;
@@ -21,6 +17,9 @@ class World
         engine::VertexBuffer positionVbo, texcoordVbo, normalVbo;
         Minefield::OuterChunkCoord coord;
         static const int size = Minefield::size;
+
+        // it has to be cached because physics doesn't make a copy
+        std::vector<glm::vec3> Positions;   
 
         void draw();
 
@@ -37,6 +36,10 @@ class World
         DisplayChunk (Minefield::OuterChunkCoord c);
     };
 
+private:
+    Minefield field;
+    // rendering
+    std::shared_ptr<engine::Program> shader;
     std::map<Minefield::OuterChunkCoord, DisplayChunk> displayChunks;
 
     void _recalcChunk(DisplayChunk & dc);

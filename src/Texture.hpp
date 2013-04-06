@@ -71,8 +71,7 @@ public:
     Texture () : id(0) {
     }
 
-    Texture (Texture const&) = delete;
-    Texture& operator= (Texture const&) = delete;
+
 
     Texture(Texture&& other) {
         id = other.id;
@@ -88,4 +87,8 @@ public:
     ~Texture() {
         if (id) glDeleteTextures(1, &id);
     }
+
+private:
+    Texture (Texture const&)/* = delete*/;
+    Texture& operator= (Texture const&)/* = delete*/;
 };

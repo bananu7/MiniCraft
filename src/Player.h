@@ -4,9 +4,8 @@
 #include "Minefield.h"
 #include <glm/glm.hpp>
 
-
 class Player {
-    const float speed = 5.f / 60.f;
+    const float speed;
 
     glm::vec3 position;
     glm::vec3 velocity;
@@ -49,7 +48,8 @@ class Player {
 
 public:
     void move() {
-        using wc = Minefield::WorldCoord;
+        //using wc = Minefield::WorldCoord;
+        typedef Minefield::WorldCoord wc;
 
         wc target = _calculateTarget();
         bool canProceed = false;
@@ -91,7 +91,8 @@ public:
     
     template<typename TQuery>
     Player(TQuery&& q) : isPassableQuery(std::forward<TQuery>(q)),
-        velocity(0.f, 0.f, 0.f)
+        velocity(0.f, 0.f, 0.f),
+        speed(5.f / 60.f)
     {
     }
 };

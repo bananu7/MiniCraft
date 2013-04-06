@@ -69,7 +69,8 @@ void World::init()
 
 void World::_recalcChunk(World::DisplayChunk & c) {
     c.visibleWallsCount = 0;
-    std::vector<glm::vec3> Positions;
+
+    c.Positions.clear();
     std::vector<glm::vec2> Texcoords;
     std::vector<glm::vec3> Normals;
 
@@ -145,7 +146,7 @@ void World::_recalcChunk(World::DisplayChunk & c) {
                             // Each wall has two triangles
                             for (int t = 0; t < 6; ++t) {
                                 unsigned vert_num = Walls[t + wall * 6];
-                                Positions.push_back(Verts[vert_num] + glm::vec3(x,y,z) + chunkOffset);
+                                c.Positions.push_back(Verts[vert_num] + glm::vec3(x,y,z) + chunkOffset);
 
                                 Texcoords.push_back(TexCoords[t]/16.f + calculateTexCoords(block, wall));
                                 Normals.push_back(NormalTable[wall]);
@@ -157,7 +158,7 @@ void World::_recalcChunk(World::DisplayChunk & c) {
                 }
             }
 
-    c.positionVbo.LoadData(Positions.data(), Positions.size() * sizeof(glm::vec3));
+    c.positionVbo.LoadData(c.Positions.data(), c.Positions.size() * sizeof(glm::vec3));
     c.texcoordVbo.LoadData(Texcoords.data(), Texcoords.size() * sizeof(glm::vec2));
     c.normalVbo.LoadData(Normals.data(), Normals.size() * sizeof(glm::vec3));
 
