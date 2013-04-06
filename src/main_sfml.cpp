@@ -148,7 +148,7 @@ void initResources()
     }
 
     const unsigned texUnitNum = 0;
-    image.Bind(texUnitNum);
+    image.bind(texUnitNum);
     // pixels!
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -287,22 +287,24 @@ int main()
         }
     });
 
-    Texture<TextureType::Texture_2D> mainTexture;
-    mainTexture.bind(0);
-    mainTexture.setFiltering(FilteringDirection::Minification, FilteringMode::Nearest);
-    mainTexture.setFiltering(FilteringDirection::Magnification, FilteringMode::Nearest);
-    //mainTexture.imageData(ScreenXSize, ScreenYSize, TextureFormat::RGBA, TextureInternalFormat::SRGBA, TextureDataType::UnsignedByte, nullptr);
-    mainTexture.imageData(ScreenXSize, ScreenYSize, TextureFormat::RGBA, TextureInternalFormat::RGBA, TextureDataType::Float, nullptr);
+    namespace tex_desc = engine::texture_desc;
 
-    Texture<TextureType::Texture_2D> depthTexture;
+    engine::Texture<tex_desc::Type::Texture_2D> mainTexture;
+    mainTexture.bind(0);
+    mainTexture.setFiltering(tex_desc::FilteringDirection::Minification, tex_desc::FilteringMode::Nearest);
+    mainTexture.setFiltering(tex_desc::FilteringDirection::Magnification, tex_desc::FilteringMode::Nearest);
+    //mainTexture.imageData(ScreenXSize, ScreenYSize, TextureFormat::RGBA, TextureInternalFormat::SRGBA, TextureDataType::UnsignedByte, nullptr);
+    mainTexture.imageData(ScreenXSize, ScreenYSize, tex_desc::Format::RGBA, tex_desc::InternalFormat::RGBA, tex_desc::DataType::Float, nullptr);
+
+    engine::Texture<tex_desc::Type::Texture_2D> depthTexture;
     depthTexture.bind();
-    depthTexture.setFiltering(FilteringDirection::Minification, FilteringMode::Nearest);
-    depthTexture.setFiltering(FilteringDirection::Magnification, FilteringMode::Nearest);
-    depthTexture.imageData(ScreenXSize, ScreenYSize, TextureFormat::Depth, TextureInternalFormat::Depth, TextureDataType::Float, nullptr);
+    depthTexture.setFiltering(tex_desc::FilteringDirection::Minification, tex_desc::FilteringMode::Nearest);
+    depthTexture.setFiltering(tex_desc::FilteringDirection::Magnification, tex_desc::FilteringMode::Nearest);
+    depthTexture.imageData(ScreenXSize, ScreenYSize, tex_desc::Format::Depth, tex_desc::InternalFormat::Depth, tex_desc::DataType::Float, nullptr);
 
     engine::Framebuffer mainFbo;
-    mainFbo.AttachTexture(GL_TEXTURE_2D, mainTexture.getId());
-    mainFbo.AttachTexture(GL_TEXTURE_2D, depthTexture.getId(), GL_DEPTH_ATTACHMENT);
+    mainFbo.AttachTexture(mainTexture, engine::fbo_desc::Attachment::Color_0);
+    mainFbo.AttachTexture(depthTexture, engine::fbo_desc::Attachment::Depth);
     if (!mainFbo.IsValid())
         BREAKPOINT();
 
@@ -409,7 +411,7 @@ int main()
             shader->SetUniform("Eye", Camera.Position);
 
             // world (cubes)
-            image.Bind(0);
+            image.bind(0);
             glEnable(GL_DEPTH_TEST);
             w.draw();
 

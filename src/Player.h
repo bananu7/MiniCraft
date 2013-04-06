@@ -15,13 +15,13 @@ class Player {
     glm::vec3 _calculateDirectionVector () {
         glm::vec2 dirInRad = direction / 180.f * 3.1416f;
         dirInRad += (3.1416f * 0.5f);
-        return glm::vec3(-cosf(dirInRad.y), 0.f, -sinf(dirInRad.y));
+        return glm::vec3(-std::cos(dirInRad.y), 0.f, -std::sin(dirInRad.y));
     }
 
     Minefield::WorldCoord _calculateTarget() {
         // there are 4 possible options.
         // it's a situation similar to raycasting.
-        Minefield::WorldCoord result(floorf(position.x), floorf(position.y), floorf(position.z));
+        Minefield::WorldCoord result(std::floor(position.x), std::floor(position.y), std::floor(position.z));
 
         auto const dir = _calculateDirectionVector();
 
@@ -30,8 +30,8 @@ class Player {
         const bool zAdv = dir.z > 0;
 
         // calculate planes
-        float xPlane = (xAdv) ? std::floorf(position.x) + 1.f : std::ceilf(position.x) - 1.f;
-        float zPlane = (zAdv) ? std::floorf(position.z) + 1.f : std::ceilf(position.y) - 1.f;
+        float xPlane = (xAdv) ? std::floor(position.x) + 1.f : std::ceil(position.x) - 1.f;
+        float zPlane = (zAdv) ? std::floor(position.z) + 1.f : std::ceil(position.y) - 1.f;
 
         float xLen = (xPlane - position.x) / dir.x;
         float zLen = (zPlane - position.z) / dir.z;
@@ -90,9 +90,10 @@ public:
     glm::vec2 const& getDirection() const { return direction; }
     
     template<typename TQuery>
-    Player(TQuery&& q) : isPassableQuery(std::forward<TQuery>(q)),
-        velocity(0.f, 0.f, 0.f),
-        speed(5.f / 60.f)
+    Player(TQuery&& q) 
+        : velocity(0.f, 0.f, 0.f)
+        , isPassableQuery(std::forward<TQuery>(q))
+        , speed(5.f / 60.f)
     {
     }
 };

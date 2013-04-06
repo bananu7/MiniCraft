@@ -234,7 +234,7 @@ public:
         program.SetUniform("Projection", Proj);
         program.Bind();
         program.SetTex("tex", 0);
-        texture.Bind(0);
+        texture.bind(0);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 

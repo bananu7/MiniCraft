@@ -19,14 +19,12 @@
     <ClInclude Include="src\Minefield.h" />
     <ClInclude Include="src\Player.h" />
     <ClInclude Include="src\simplex.h" />
-    <ClInclude Include="src\Texture.hpp" />
     <ClInclude Include="src\World.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main_sfml.cpp" />
     <ClCompile Include="src\Minefield.cpp" />
     <ClCompile Include="src\simplex.cpp" />
-    <ClCompile Include="src\Texture.cpp" />
     <ClCompile Include="src\World.cpp" />
   </ItemGroup>
   <ItemGroup>
