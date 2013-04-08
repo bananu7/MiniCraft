@@ -59,8 +59,10 @@ void mouse(double dmx, double dmy);
 void CheckForGLError()
 {
     int Err = glGetError();
-    if (Err != 0)
+    if (Err != 0) {
+        ERROR_MESSAGE("", "OpenGL error");
         BREAKPOINT();
+    }
 }
 
 Line* g_L;
@@ -87,7 +89,6 @@ void initShadersEngine()
     std::ifstream vert("../Data/shaders/main_cubes.vert");
     std::ifstream frag("../Data/shaders/main_cubes.frag");
 
-    typedef unsigned char uc;
     try 
     {
         {
@@ -122,7 +123,7 @@ void initShadersEngine()
         CheckForGLError();
     }
     catch (std::exception const& e) {
-        ERROR_MESSAGE(e.what(), "Exception");
+        
         BREAKPOINT();
     }
 
@@ -133,17 +134,17 @@ void initShadersEngine()
 void initResources()
 {
     try {
-        std::basic_ifstream<unsigned char> file ("../data/terrain.png", std::ios::binary);
+        std::ifstream file ("../Data/terrain.png", std::ios::binary);
         if (!file)
-            throw std::runtime_error("File not open");
+            throw std::runtime_error("terrain.png file not open");
 
         // I prefer the shorter version
-        image = engine::Image::Load(istreambuf_range<unsigned char>(file), true);
-        //image = engine::Image::Load(boost::make_iterator_range(std::istreambuf_iterator<unsigned char>(file),
-        //													   std::istreambuf_iterator<unsigned char>()));
+        image = engine::Image::Load(istreambuf_range<char>(file), true);
+        //image = engine::Image::Load(boost::make_iterator_range(std::istreambuf_iterator<char>(file),
+        //													   std::istreambuf_iterator<char>()));
     }
     catch (std::exception const& e) {
-        //MessageBox(0, e.what(), "Texture loading failed", MB_OK | MB_ICONERROR);
+        ERROR_MESSAGE(e.what(), "initResources");
         BREAKPOINT();
     }
 
@@ -245,6 +246,7 @@ int WINAPI WinMain (HINSTANCE hInstance,
 int main()
 #endif
 {
+    ERROR_MESSAGE("hello", "hello");
     sf::Window window(sf::VideoMode(ScreenXSize, ScreenYSize), "Minicraft v0.3", 7, sf::ContextSettings(24, 0, 0, 3, 3));
 
     window.setMouseCursorVisible(false);
@@ -311,8 +313,8 @@ int main()
 
     // temporary test lines
     // x-line
-    for (int j = -1; j < 1; ++j)
-        for (int i = -1; i < 1; ++i) {
+    for (int j = -5; j < 5; ++j)
+        for (int i = -5; i < 5; ++i) {
             w.set(Minefield::WorldCoord(i*24, 1, j*24), 2);
         }
 

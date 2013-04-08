@@ -38,8 +38,6 @@ public:
         NL "    out_Color = vec4(1.0, 0.0, 0.0, 1.0);"
         NL "}" NL;
 
-        typedef unsigned char uc;
-
         {
             auto vs = std::make_shared<engine::VertexShader>(vert);
             vs->Compile();

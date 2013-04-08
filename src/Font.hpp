@@ -173,12 +173,12 @@ class Font {
     engine::Image texture;
 
     void _load () {
-        std::basic_ifstream<unsigned char> file ("../data/font.png", std::ios::binary);
+        std::ifstream file ("../Data/font.png", std::ios::binary);
         if (!file)
-            throw std::runtime_error("File not open");
+            throw std::runtime_error("font.png file not open");
 
         // image creates a texture for us automagically
-        texture = engine::Image::Load(istreambuf_range<unsigned char>(file));
+        texture = engine::Image::Load(istreambuf_range<char>(file));
 
         /*std::fstream descriptorFile ("../data/font.xml");
         if (!descriptorFile)
