@@ -94,6 +94,7 @@ public:
         : velocity(0.f, 0.f, 0.f)
         , isPassableQuery(std::forward<TQuery>(q))
         , speed(5.f / 60.f)
+        , position(0.f, 20.f, 0.f)
     {
     }
 };

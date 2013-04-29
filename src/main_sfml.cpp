@@ -174,11 +174,16 @@ public:
 
         //luaVm.register_function("print", [this](const std::string& s){ this->console.write(s); });
 
+        
+
         luaVm.register_function("exit", [this]{ this->console.write("OMG EXIT"); });
         luaVm.register_function("print", [this](std::string s){ this->console.write(std::move(s)); });
         luaVm.register_function("recalc", [this]{ this->world.recalcInstances(); });
         luaVm.register_function("save", [this]{ this->world.saveToFile("world.mcw"); });
         luaVm.register_function("load", [this]{ this->world.loadFromFile("world.mcw"); });
+        luaVm.register_function("set", [this](int x, int y, int z, int v) { world.set(Minefield::WorldCoord(x,y,z), v); });
+     //   luaVm.register_function("set", [this](int x, int y, int z) { return world.get(Minefield::WorldCoord(x,y,z)).value; });
+        luaVm.register_function("get", []{ return 5; });
 
         init();
         initShadersEngine();
@@ -279,7 +284,7 @@ int WINAPI WinMain (HINSTANCE hInstance,
 int main()
 #endif
 {
-    ERROR_MESSAGE("hello", "hello");
+    //ERROR_MESSAGE("hello", "hello");
     sf::Window window(sf::VideoMode(ScreenXSize, ScreenYSize), "Minicraft v0.3", 7, sf::ContextSettings(24, 0, 0, 3, 3));
 
     window.setMouseCursorVisible(false);
@@ -292,15 +297,12 @@ int main()
     L[1].set(glm::vec3(-0.05f, 0.f, 0.f), glm::vec3(0.05f, 0.f, 0.f));
     L[2].set(glm::vec3(-0.05f, 0.f, 0.f), glm::vec3(0.05f, 0.f, 0.f));
 
-    Camera.Position.y += 20.f;
-
     App app;
 
     Font font;
     player = std::unique_ptr<Player>(new Player([&app](Minefield::WorldCoord const& wc) {
         return (app.world.get(wc).value) ? false : true;
     }));
-    player->setPosition(Camera.Position);
     player->setDirection(Camera.LookDir);
 
     FullscreenQuad fq;
@@ -329,8 +331,8 @@ int main()
 
 
     // temporary surrounding generation
-    for (int j = -2; j < 2; ++j)
-        for (int i = -2; i < 2; ++i) {
+    for (int j = -1; j < 1; ++j)
+        for (int i = -1; i < 1; ++i) {
             app.world.set(Minefield::WorldCoord(i*24, 1, j*24), 2);
         }
 
@@ -393,7 +395,7 @@ int main()
         player->gravity();
         Camera.Position = player->getPosition();
         // compensate for eye height
-        Camera.Position.y += 1.5f;
+        Camera.Position.y += 1.620f;
         player->setDirection(Camera.LookDir);
 
         if (active)
