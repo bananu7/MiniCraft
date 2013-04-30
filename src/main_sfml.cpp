@@ -172,18 +172,14 @@ public:
             this->luaVm.eval(s);
         });
 
-        //luaVm.register_function("print", [this](const std::string& s){ this->console.write(s); });
-
-        
-
         luaVm.register_function("exit", [this]{ this->console.write("OMG EXIT"); });
         luaVm.register_function("print", [this](std::string s){ this->console.write(std::move(s)); });
         luaVm.register_function("recalc", [this]{ this->world.recalcInstances(); });
+        luaVm.register_function("recalc_full", [this]{ this->world.recalcInstances(true); });
         luaVm.register_function("save", [this]{ this->world.saveToFile("world.mcw"); });
         luaVm.register_function("load", [this]{ this->world.loadFromFile("world.mcw"); });
         luaVm.register_function("set", [this](int x, int y, int z, int v) { world.set(Minefield::WorldCoord(x,y,z), v); });
-     //   luaVm.register_function("set", [this](int x, int y, int z) { return world.get(Minefield::WorldCoord(x,y,z)).value; });
-        luaVm.register_function("get", []{ return 5; });
+        luaVm.register_function("get", [this](int x, int y, int z) { return static_cast<int>(world.get(Minefield::WorldCoord(x,y,z)).value); });
 
         init();
         initShadersEngine();
@@ -195,22 +191,23 @@ public:
 
     void keyboard()
     {
-        if (keys[sf::Keyboard::D])
-            Camera.Strafe(-0.2f);
+        if (keys[sf::Keyboard::D]) {
+            player->move(Player::Direction::StrafeRight);
+            //Camera.Strafe(-0.2f);
+        }
 
-        if (keys[sf::Keyboard::A])
-            Camera.Strafe(0.2f);
+        if (keys[sf::Keyboard::A]) {
+            player->move(Player::Direction::StrafeLeft);
+            //Camera.Strafe(0.2f);
+        }
 
-        if (keys[sf::Keyboard::E])
-            Camera.LookDir.y += 5;
-        if (keys[sf::Keyboard::Q])
-            Camera.LookDir.y -= 5;
-
-        if (keys[sf::Keyboard::S])
-            Camera.Fly(-0.2f);
+        if (keys[sf::Keyboard::S]) {
+            //Camera.Fly(-0.2f);
+            player->move(Player::Direction::Back);
+        }
         if (keys[sf::Keyboard::W]) {
             //Camera.Fly(0.2f);
-            player->move();
+            player->move(Player::Direction::Forward);
         }
         if (keys[sf::Keyboard::Space]) {
             //Camera.Position.y += 0.2f;
@@ -242,22 +239,22 @@ public:
             glm::vec3 NormV (RMatrix[0].z, RMatrix[1].z, RMatrix[2].z);
             NormV *= -1.f;
         
-            /*auto result = w.raycast(Camera.Position, NormV, 50.f,
+            auto result = world.raycast(Camera.Position, NormV, 50.f,
                 World::INCLUDE_EMPTY | World::STOP_ON_FIRST | World::INCLUDE_FIRST);
             if (result.size() > 1)
             {
-                w.set(result[result.size()-2], 9);
-                w.recalcInstances();
-            }*/
+                world.set(result[result.size()-2], 9);
+                world.recalcInstances();
+            }
 
-            auto result = world.raycast(Camera.Position, NormV, 30.f,
-                World::INCLUDE_EMPTY | World::INCLUDE_FIRST);
+            /*auto result = world.raycast(Camera.Position, NormV, 30.f,
+                World::INCLUDE_EMPTY | World::INCLUDE_FIRST | World::STOP_ON_FIRST);
 
             for(auto const & c :result){
                 world.set(c,9);
             }
-
             world.recalcInstances();
+            */
 
             g_L->set(Camera.Position, Camera.Position + NormV * 20.f);
             keys[sf::Keyboard::T] = false;

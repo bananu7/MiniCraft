@@ -5,6 +5,12 @@
 #include <glm/glm.hpp>
 
 class Player {
+public:
+    enum class Direction { 
+        Forward, Back, StrafeLeft, StrafeRight
+    };
+
+private:
     const float speed;
 
     glm::vec3 position;
@@ -12,18 +18,26 @@ class Player {
     glm::vec2 direction;
     bool crouch;
 
-    glm::vec3 _calculateDirectionVector () {
-        glm::vec2 dirInRad = direction / 180.f * 3.1416f;
+    glm::vec3 _calculateDirectionVector (Direction move_direction) {
+        float direction_offset = 0.f;
+        switch (move_direction) {
+            case Direction::Forward: direction_offset = 0.f; break;
+            case Direction::Back: direction_offset = 180.f; break;
+            case Direction::StrafeLeft: direction_offset = 270.f; break;
+            case Direction::StrafeRight: direction_offset = 90.f; break;
+        }
+
+        glm::vec2 dirInRad = (direction + glm::vec2(0.f, direction_offset)) / 180.f * 3.1416f;
         dirInRad += (3.1416f * 0.5f);
         return glm::vec3(-std::cos(dirInRad.y), 0.f, -std::sin(dirInRad.y));
     }
 
-    Minefield::WorldCoord _calculateTarget() {
+    Minefield::WorldCoord _calculateTarget(Direction move_direction) {
         // there are 4 possible options.
         // it's a situation similar to raycasting.
         Minefield::WorldCoord result(std::floor(position.x), std::floor(position.y), std::floor(position.z));
 
-        auto const dir = _calculateDirectionVector();
+        auto const dir = _calculateDirectionVector(move_direction);
 
         // first, check the quadrant
         const bool xAdv = dir.x > 0;
@@ -47,11 +61,11 @@ class Player {
     std::function<bool(Minefield::WorldCoord const&)> isPassableQuery;
 
 public:
-    void move() {
+    void move(Direction direction) {
         //using wc = Minefield::WorldCoord;
         typedef Minefield::WorldCoord wc;
 
-        wc target = _calculateTarget();
+        wc target = _calculateTarget(direction);
         bool canProceed = false;
 
         if (!crouch) {
@@ -62,7 +76,7 @@ public:
         }
 
         if (canProceed) {
-            position += _calculateDirectionVector() * speed;
+            position += _calculateDirectionVector(direction) * speed;
         }
     }
 
