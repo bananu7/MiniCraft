@@ -248,7 +248,7 @@ public:
             }
         }
 
-        glEnable(GL_CULL_FACE);
+        //glEnable(GL_CULL_FACE);
     }
 
     Font () {

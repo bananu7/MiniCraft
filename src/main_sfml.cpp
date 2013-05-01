@@ -29,6 +29,7 @@
 #include "Console.hpp"
 #include "helpers.hpp"
 #include "Player.h"
+#include "Model.h"
 
 #ifdef MINICRAFT_WINDOWS
     #include <Windows.h>
@@ -53,7 +54,10 @@ engine::CameraFly Camera;
 float Time = 0.f;
 
 engine::Image image;
-auto shader = std::make_shared<engine::Program>();
+engine::Image test_texture;
+auto world_shader = std::make_shared<engine::Program>();
+auto trivial_shader = std::make_shared<engine::Program>();
+auto texturing_shader = std::make_shared<engine::Program>();
 
 void CheckForGLError()
 {
@@ -67,31 +71,25 @@ void CheckForGLError()
 Line* g_L;
 bool g_Run = true;
 bool consoleOn = false;
-std::unique_ptr<Player> player;
 
 void init()
 {
     Projection = glm::perspective(70.0, 16.0/10.0, 0.1, 1000.0);
 
-    Camera.Position = glm::vec3(0, -2, 20);
+    Camera.Position = glm::vec3(0, 0, 20);
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
+    //glEnable(GL_CULL_FACE);
 
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_FRAMEBUFFER_SRGB);
 }
 
-void initShadersEngine()
-{
-    CheckForGLError();
-
-    std::ifstream vert("../Data/shaders/main_cubes.vert");
-    std::ifstream frag("../Data/shaders/main_cubes.frag");
-
+template<typename VSdata, typename FSdata>
+void safeLoadShader(std::shared_ptr<engine::Program>& shader, VSdata vsd, FSdata fsd) {
     try 
     {
         {
-            auto vs = std::make_shared<engine::VertexShader>(istreambuf_range<char>(vert));
+            auto vs = std::make_shared<engine::VertexShader>(vsd);
             auto compResult = vs->Compile();
             if (!compResult.empty())
                 throw std::runtime_error(compResult);
@@ -102,7 +100,7 @@ void initShadersEngine()
         CheckForGLError();
 
         {
-            auto fs = std::make_shared<engine::FragmentShader>(istreambuf_range<char>(frag));
+            auto fs = std::make_shared<engine::FragmentShader>(fsd);
             auto compResult = fs->Compile();
             if (!compResult.empty())
                 throw std::runtime_error(compResult);
@@ -125,6 +123,44 @@ void initShadersEngine()
         
         BREAKPOINT();
     }
+}
+
+void initShadersEngine()
+{
+    CheckForGLError();
+    {
+        std::ifstream vert("../Data/shaders/main_cubes.vert");
+        std::ifstream frag("../Data/shaders/main_cubes.frag");
+
+        safeLoadShader(world_shader, istreambuf_range<char>(vert), istreambuf_range<char>(frag));
+    }
+    
+    {
+        std::string vert = 
+        "#version 330 core"
+        NL "precision mediump float;"
+        NL "layout(location = 0) in vec3 in_position;"
+        NL "uniform mat4 Projection, View;"
+        NL "void main() {"
+        NL "    gl_Position = Projection * View * vec4(in_position, 1.0);"
+        NL "}" NL;
+
+        std::string frag = 
+        "#version 330 core"
+        NL "precision mediump float;"
+        NL "out vec4 out_Color;"
+        NL "void main () {"
+        NL "    out_Color = vec4(1.0, 0.0, 0.0, 1.0);"
+        NL "}" NL;
+
+        safeLoadShader(trivial_shader, vert, frag);
+    }
+
+    {
+        std::ifstream vert("../Data/shaders/texturing_and_light.vert");
+        std::ifstream frag("../Data/shaders/texturing_and_light.frag");
+        safeLoadShader(texturing_shader, istreambuf_range<char>(vert), istreambuf_range<char>(frag));
+    }
 
     // FIXME : rekompilacja psuje uniformy!
 //	shader.Compile();
@@ -132,27 +168,38 @@ void initShadersEngine()
 
 void initResources()
 {
-    try {
-        std::ifstream file ("../Data/terrain.png", std::ios::binary);
-        if (!file)
-            throw std::runtime_error("terrain.png file not open");
+    auto safeLoadImage = [](std::string const& path, bool srgb) -> engine::Image {
+        try {
+            std::ifstream file (path, std::ios::binary);
+            if (!file)
+            throw std::runtime_error(path + " file not open");
 
-        // I prefer the shorter version
-        image = engine::Image::Load(istreambuf_range<char>(file), true);
-        //image = engine::Image::Load(boost::make_iterator_range(std::istreambuf_iterator<char>(file),
-        //													   std::istreambuf_iterator<char>()));
-    }
-    catch (std::exception const& e) {
-        ERROR_MESSAGE(e.what(), "initResources");
-        BREAKPOINT();
-    }
+            // I prefer the shorter version
+            return engine::Image::Load(istreambuf_range<char>(file), srgb);   
+            //image = engine::Image::Load(boost::make_iterator_range(std::istreambuf_iterator<char>(file),
+            //													   std::istreambuf_iterator<char>()));
+        }
+        catch (std::exception const& e) {
+            ERROR_MESSAGE(e.what(), "initResources");
+            BREAKPOINT();
+        }
+
+        return engine::Image();
+    };
+
+    image = safeLoadImage("../Data/terrain.png", true);
+    test_texture = safeLoadImage("../Data/models/cube/Untitled.png", true);
 
     const unsigned texUnitNum = 0;
     image.bind(texUnitNum);
     // pixels!
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    shader->SetTex("Texture", texUnitNum);
+    world_shader->SetTex("Texture", texUnitNum);
+
+    test_texture.bind();
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 }
 
 class App {
@@ -160,13 +207,19 @@ public:
     Console console;
     lua::state luaVm;
     World world;
+    Model fence;
+    Player player;
 
     App()
         : console(glm::ivec2(80, 4))
         , luaVm([this](std::string const& error) {
             this->console.write(error);
         })
-        , world(shader)
+        , world(world_shader)
+        , fence("../Data/models/fence2.obj", texturing_shader)
+        , player([this](Minefield::WorldCoord const& wc) {
+            return (world.get(wc).value) ? false : true;
+        })
     {
         console.setCallback([this](std::string const& s){
             this->luaVm.eval(s);
@@ -180,6 +233,7 @@ public:
         luaVm.register_function("load", [this]{ this->world.loadFromFile("world.mcw"); });
         luaVm.register_function("set", [this](int x, int y, int z, int v) { world.set(Minefield::WorldCoord(x,y,z), v); });
         luaVm.register_function("get", [this](int x, int y, int z) { return static_cast<int>(world.get(Minefield::WorldCoord(x,y,z)).value); });
+        luaVm.register_function("fly", [this]{ player.flying = !player.flying; });
 
         init();
         initShadersEngine();
@@ -192,26 +246,26 @@ public:
     void keyboard()
     {
         if (keys[sf::Keyboard::D]) {
-            player->move(Player::Direction::StrafeRight);
+            player.move(Player::Direction::StrafeRight);
             //Camera.Strafe(-0.2f);
         }
 
         if (keys[sf::Keyboard::A]) {
-            player->move(Player::Direction::StrafeLeft);
+            player.move(Player::Direction::StrafeLeft);
             //Camera.Strafe(0.2f);
         }
 
         if (keys[sf::Keyboard::S]) {
             //Camera.Fly(-0.2f);
-            player->move(Player::Direction::Back);
+            player.move(Player::Direction::Back);
         }
         if (keys[sf::Keyboard::W]) {
             //Camera.Fly(0.2f);
-            player->move(Player::Direction::Forward);
+            player.move(Player::Direction::Forward);
         }
         if (keys[sf::Keyboard::Space]) {
             //Camera.Position.y += 0.2f;
-            player->jump();
+            player.jump();
             keys[sf::Keyboard::Space] = false;
         }
         if (keys[sf::Keyboard::C])
@@ -297,10 +351,7 @@ int main()
     App app;
 
     Font font;
-    player = std::unique_ptr<Player>(new Player([&app](Minefield::WorldCoord const& wc) {
-        return (app.world.get(wc).value) ? false : true;
-    }));
-    player->setDirection(Camera.LookDir);
+    app.player.setDirection(Camera.LookDir);
 
     FullscreenQuad fq;
 
@@ -389,11 +440,11 @@ int main()
         }
 
         // updates:
-        player->gravity();
-        Camera.Position = player->getPosition();
+        app.player.gravity();
+        Camera.Position = app.player.getPosition();
         // compensate for eye height
         Camera.Position.y += 1.620f;
-        player->setDirection(Camera.LookDir);
+        app.player.setDirection(Camera.LookDir);
 
         if (active)
         {
@@ -416,13 +467,21 @@ int main()
 
             Camera.CalculateView();	
             glm::mat4 View = Camera.GetViewMat();
-            shader->SetUniform("View", View);
-            shader->SetUniform("Eye", Camera.Position);
+            world_shader->SetUniform("View", View);
+            world_shader->SetUniform("Eye", Camera.Position);
 
             // world (cubes)
             image.bind(0);
             glEnable(GL_DEPTH_TEST);
             app.world.draw();
+
+            trivial_shader->SetUniform("View", View);
+
+            texturing_shader->SetUniform("View", View);
+            texturing_shader->SetUniform("Eye", Camera.Position);
+            // test fence
+            test_texture.bind(0);
+            app.fence.draw();
 
             // crosshair
             L[0].draw(glm::mat4(1.0), glm::mat4(1.0));
@@ -458,7 +517,7 @@ int main()
             //player position 
             {
                 std::stringstream s;
-                glm::vec3 pp = player->getPosition();
+                glm::vec3 pp = app.player.getPosition();
                 s << "[" << pp.x << ", " << pp.y << ", " << pp.z << "]";
                 font.draw(s.str(), glm::vec2(10.f, 30.f));
             }

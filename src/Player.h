@@ -61,6 +61,8 @@ private:
     std::function<bool(Minefield::WorldCoord const&)> isPassableQuery;
 
 public:
+    bool flying;
+
     void move(Direction direction) {
         //using wc = Minefield::WorldCoord;
         typedef Minefield::WorldCoord wc;
@@ -85,6 +87,9 @@ public:
     }
 
     void gravity() {
+        if (flying)
+            return;
+
         Minefield::WorldCoord under (position.x, position.y-1.f, position.z);
 
         velocity.y -= 9.81f / 60.f;
@@ -109,6 +114,7 @@ public:
         , isPassableQuery(std::forward<TQuery>(q))
         , speed(5.f / 60.f)
         , position(0.f, 20.f, 0.f)
+        , flying(false)
     {
     }
 };

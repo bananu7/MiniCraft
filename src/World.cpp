@@ -140,6 +140,8 @@ void World::_recalcChunk(World::DisplayChunk & c) {
 
                     // Generate output vertices into VBOs
                     // 6 walls
+
+                    // cube shape
                     for (unsigned wall = 0; wall < 6; ++wall) {
                         //check if the wall is obscured
                         if (!(block.neighbors[wall])) {
@@ -155,6 +157,8 @@ void World::_recalcChunk(World::DisplayChunk & c) {
                             ++c.visibleWallsCount;
                         }
                     }
+                    
+                    //todo: non-cube blocks (such as stairs etc)
                 }
             }
 
