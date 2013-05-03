@@ -73,6 +73,7 @@ void World::_recalcChunk(World::DisplayChunk & c) {
     c.Positions.clear();
     std::vector<glm::vec2> Texcoords;
     std::vector<glm::vec3> Normals;
+    std::vector<int32_t> Lighting;
 
      static const std::array<glm::vec3, 8> Verts = {
         glm::vec3(0.f, 0.f, 0.f),
@@ -115,12 +116,12 @@ void World::_recalcChunk(World::DisplayChunk & c) {
     */
 
     static int Walls[] = {
-        7,3,1,    7,1,5, // front
-        6,7,5,    6,5,4, // right
-        2,6,4,    2,4,0, // back
-        3,2,0,    3,0,1, // left
-        6,2,3,    6,3,7, // top
-        5,1,0,    5,0,4  // bottom
+        7,3,1,    7,1,5, // front (+z)
+        6,7,5,    6,5,4, // right (+x)
+        2,6,4,    2,4,0, // back (-z)
+        3,2,0,    3,0,1, // left (-x)
+        6,2,3,    6,3,7, // top (+y)
+        5,1,0,    5,0,4  // bottom (-y)
     };
 
     glm::vec3 chunkOffset (c.coord.x * c.size, c.coord.y * c.size, c.coord.z * c.size);
@@ -145,6 +146,18 @@ void World::_recalcChunk(World::DisplayChunk & c) {
                     for (unsigned wall = 0; wall < 6; ++wall) {
                         //check if the wall is obscured
                         if (!(block.neighbors[wall])) {
+                            // calculate ambient occlusion for each wall vertex.
+                            // This requires checking 8 surrounding neighbours.
+                            /*
+                               1 2 3
+                               4 X 5
+                               6 7 8
+                            */
+                            // vertex [0,0] is affected by 1,2 and 4.
+                            // others are quite obvious
+                            // it gives 8 + 8 + 4 neighbours total
+                            //const Minefield::WorldCoord neighbourCoords[8]
+
                             // Each wall has two triangles
                             for (int t = 0; t < 6; ++t) {
                                 unsigned vert_num = Walls[t + wall * 6];
