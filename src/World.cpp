@@ -156,7 +156,34 @@ void World::_recalcChunk(World::DisplayChunk & c) {
                             // vertex [0,0] is affected by 1,2 and 4.
                             // others are quite obvious
                             // it gives 8 + 8 + 4 neighbours total
-                            //const Minefield::WorldCoord neighbourCoords[8]
+
+                            /*
+                            for each square (x6)
+                                for each corner (x4) 
+                                    check 3 neighbors and write their count.
+                            */
+
+                            enum Side { Xplus, Xminus, Yplus, Yminus, Zplus, Zminus };
+
+                            auto valueOfNeighbour = [](Side side, unsigned neighbour) {
+                                // axis offsets
+                                static const unsigned o1[8] = { -1, 0, 1, -1, 1, -1, 0, 1 };
+                                static const unsigned o2[8] = { -1, -1, -1, 0, 0, 1, 1, 1 };
+                                static const unsigned o3[8] = { 1, 1, 1, 1, 1, 1, 1, 1 };
+                                
+                                static const std::tuple<const unsigned*,const unsigned*,const unsigned*> permutations[2] = {
+                                    std::make_tuple( o1, o2, o3 ), std::make_tuple( o1, o2, o3 )
+                                };
+                            };
+
+                            /*auto sum = [&field](Side side, unsigned a, unsigned b, unsigned c) {
+                                
+                            };*/
+
+                            /*int corner_1 = sum(1,2,4);
+                            int corner_2 = sum(2,3,5);
+                            int corner_3 = sum(4,6,7);
+                            int corner_4 = sum(5,7,8);*/
 
                             // Each wall has two triangles
                             for (int t = 0; t < 6; ++t) {

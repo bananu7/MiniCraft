@@ -65,8 +65,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\PROJECTS\Engine\Engine\include;C:\PROJECTS\Engine\dependencies\glm-0.9.4.1;C:\PROJECTS\Engine\dependencies\pugixml-1.2\src;C:\PROJECTS\Engine\dependencies\SFML-2.0\include;C:\PROJECTS\MiniCraft\deps\mNBT\include;$(SolutionDir)\deps\lundi;C:\DEV\Lua5.1\include;C:\DEV\Assimp\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\PROJECTS\Engine\Debug;C:\PROJECTS\MiniCraft\deps\mNBT\Debug;C:\DEV\Lua5.1\lib;C:\DEV\Assimp\lib\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\PROJECTS\Engine\Engine\include;C:\PROJECTS\Engine\dependencies\glm-0.9.4.1;C:\PROJECTS\Engine\dependencies\pugixml-1.2\src;C:\PROJECTS\Engine\dependencies\SFML-2.0\include;$(SolutionDir)\deps\lundi;C:\DEV\Lua5.1\include;C:\DEV\Assimp\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\PROJECTS\Engine\Debug;C:\DEV\Lua5.1\lib;C:\DEV\Assimp\lib\x86;$(LibraryPath)</LibraryPath>
     <IntDir>$(Configuration)\intermediate\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -92,7 +92,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>opengl32.lib;Engine.lib;mNBT.lib;lua5.1.lib;assimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;Engine.lib;lua5.1.lib;assimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>msvcrt</IgnoreSpecificDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
