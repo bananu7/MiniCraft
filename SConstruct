@@ -8,7 +8,8 @@ mingw_path = "C:/DEV/MinGW32-4.8/mingw32/"
 engine_path = "C:/PROJECTS/Engine/"
 # set your Boost path here
 boost_path = "C:/DEV/boost_1_52_0/"
-
+# set your Lua path here
+lua_path = "C:/DEV/Lua5.1/"
 
 #---------------------------------------
 # you shouldn't need to modify that part 
@@ -25,9 +26,15 @@ if platform.system() == 'Windows':
         engine_path + "dependencies/glew-1.9.0/include/",
         engine_path + "dependencies/glm-0.9.4.1/",
         engine_path + "dependencies/pugixml-1.2/src/",
+        "deps/lundi/",
+        lua_path + "include/",
         boost_path,
     ])
     
+    env.Append(LIBPATH=[
+        lua_path + "lib/"
+    ])
+
     env.Append(LIBS=[
         "winmm", 
         "wininet",
@@ -36,7 +43,7 @@ if platform.system() == 'Windows':
 else:
     env = Environment(ENV = os.environ)
 
-env.Append(CPPFLAGS="-Wall -g -std=c++11")
+env.Append(CPPFLAGS="-g -std=c++11")
 env.Append(CPPDEFINES="GLEW_NO_GLU")
 env.Append(CPPDEFINES="SFML_STATIC")
 env.Append(CPPDEFINES="GLEW_STATIC")
@@ -55,6 +62,7 @@ env.Prepend(LIBS=[
 'SFML',
 'opengl32',
 'FreeImage',
+'Lua5.1',
 ])
 
 cpp_files = Glob("src/*.cpp")

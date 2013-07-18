@@ -27,10 +27,10 @@ public:
     // 1. Enter/Bksp key can be os-specific
     // 2. User might want to have an enter/bksp button
     void enter () {
+        buffer.push_front(inputBuffer);
+
         if (enterCallback)
             enterCallback(inputBuffer);
-
-        buffer.push_front(inputBuffer);
 
         inputBuffer = "";
     }

@@ -40,7 +40,7 @@ private:
     Minefield field;
     // rendering
     std::shared_ptr<engine::Program> shader;
-    std::map<Minefield::OuterChunkCoord, DisplayChunk> displayChunks;
+    std::unordered_map<Minefield::OuterChunkCoord, DisplayChunk, Minefield::CoordHash> displayChunks;
 
     void _recalcChunk(DisplayChunk & dc);
 
