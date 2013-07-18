@@ -1,7 +1,8 @@
 #pragma once
 #include <array>
-#include <map>
+#include <unordered_map>
 #include <boost/range/adaptor/map.hpp>
+#include <boost/functional/hash.hpp>
 class Minefield
 {
 public:
@@ -82,6 +83,7 @@ public:
         void _generateCache();
 
         BlockType& _access (int x, int y, int z) { return data[x + y * size + z * size * size]; };
+        BlockType const& _access (int x, int y, int z) const { return data[x + y * size + z * size * size]; };
     public:
 
         enum Neighbor { 
@@ -100,7 +102,7 @@ public:
             if (c.z < size-1) _access(c.x, c.y, c.z+1).neighbors[Neighbor::Back] = (bvalue!= 0);
         }
         BlockType const& get (InnerChunkCoord const& c) const {
-            return data[c.x + c.y * size + c.z * size * size];
+            return _access(c.x, c.y, c.z);
         }
 
         Chunk () { }
@@ -108,18 +110,32 @@ public:
 
         friend class Minefield;
     };
+    
+    class CoordHash {
+        template<typename Tag>
+        std::size_t operator()(Coord<Tag> const& p)
+        {
+            std::size_t seed = 0;
+            boost::hash_combine(seed, p.x);
+            boost::hash_combine(seed, p.y);
+            boost::hash_combine(seed, p.z);
+
+            return seed;
+        }
+    };
 
 private:
     static OuterChunkCoord _getChunkCoordinates (int x, int y, int z);
     static int _innerChunkCoordFromOuterChunkCoord (int p);
 
-    std::map<OuterChunkCoord, Chunk> data;
+    std::unordered_map<OuterChunkCoord, Chunk, CoordHash> data;
 
 public:
     unsigned getSize () const { return size; }
 
     BlockType const& get(int x, int y, int z);
     BlockType const& get(WorldCoord const& coord);
+
     void set(int x, int y, int z, unsigned value);
 
     /*auto getChunks () -> decltype(data | boost::adaptors::map_values) {

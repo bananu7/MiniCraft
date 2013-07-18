@@ -42,6 +42,9 @@
     <ClInclude Include="src\Player.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Model.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main_sfml.cpp">
@@ -62,6 +65,12 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="Data\shaders\main_cubes.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Data\shaders\texturing_and_light.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Data\shaders\texturing_and_light.vert">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

@@ -19,6 +19,8 @@
 #include <Config.h>
 #include <FrameBuffer.h>
 
+#include <lundi.hpp>
+
 #include "World.h"
 #include "Line.hpp"
 #include "FullscreenQuad.hpp"
@@ -27,6 +29,7 @@
 #include "Console.hpp"
 #include "helpers.hpp"
 #include "Player.h"
+#include "Model.h"
 
 #ifdef MINICRAFT_WINDOWS
     #include <Windows.h>
@@ -51,10 +54,10 @@ engine::CameraFly Camera;
 float Time = 0.f;
 
 engine::Image image;
-auto shader = std::make_shared<engine::Program>();
-World w { shader };
-
-void mouse(double dmx, double dmy);
+engine::Image test_texture;
+auto world_shader = std::make_shared<engine::Program>();
+auto trivial_shader = std::make_shared<engine::Program>();
+auto texturing_shader = std::make_shared<engine::Program>();
 
 void CheckForGLError()
 {
@@ -68,31 +71,25 @@ void CheckForGLError()
 Line* g_L;
 bool g_Run = true;
 bool consoleOn = false;
-std::unique_ptr<Player> player;
 
 void init()
 {
     Projection = glm::perspective(70.0, 16.0/10.0, 0.1, 1000.0);
 
-    Camera.Position = glm::vec3(0, -2, 20);
+    Camera.Position = glm::vec3(0, 0, 20);
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
+    //glEnable(GL_CULL_FACE);
 
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_FRAMEBUFFER_SRGB);
 }
 
-void initShadersEngine()
-{
-    CheckForGLError();
-
-    std::ifstream vert("../Data/shaders/main_cubes.vert");
-    std::ifstream frag("../Data/shaders/main_cubes.frag");
-
+template<typename VSdata, typename FSdata>
+void safeLoadShader(std::shared_ptr<engine::Program>& shader, VSdata vsd, FSdata fsd) {
     try 
     {
         {
-            auto vs = std::make_shared<engine::VertexShader>(istreambuf_range<char>(vert));
+            auto vs = std::make_shared<engine::VertexShader>(vsd);
             auto compResult = vs->Compile();
             if (!compResult.empty())
                 throw std::runtime_error(compResult);
@@ -103,7 +100,7 @@ void initShadersEngine()
         CheckForGLError();
 
         {
-            auto fs = std::make_shared<engine::FragmentShader>(istreambuf_range<char>(frag));
+            auto fs = std::make_shared<engine::FragmentShader>(fsd);
             auto compResult = fs->Compile();
             if (!compResult.empty())
                 throw std::runtime_error(compResult);
@@ -126,6 +123,44 @@ void initShadersEngine()
         
         BREAKPOINT();
     }
+}
+
+void initShadersEngine()
+{
+    CheckForGLError();
+    {
+        std::ifstream vert("../Data/shaders/main_cubes.vert");
+        std::ifstream frag("../Data/shaders/main_cubes.frag");
+
+        safeLoadShader(world_shader, istreambuf_range<char>(vert), istreambuf_range<char>(frag));
+    }
+    
+    {
+        std::string vert = 
+        "#version 330 core"
+        NL "precision mediump float;"
+        NL "layout(location = 0) in vec3 in_position;"
+        NL "uniform mat4 Projection, View;"
+        NL "void main() {"
+        NL "    gl_Position = Projection * View * vec4(in_position, 1.0);"
+        NL "}" NL;
+
+        std::string frag = 
+        "#version 330 core"
+        NL "precision mediump float;"
+        NL "out vec4 out_Color;"
+        NL "void main () {"
+        NL "    out_Color = vec4(1.0, 0.0, 0.0, 1.0);"
+        NL "}" NL;
+
+        safeLoadShader(trivial_shader, vert, frag);
+    }
+
+    {
+        std::ifstream vert("../Data/shaders/texturing_and_light.vert");
+        std::ifstream frag("../Data/shaders/texturing_and_light.frag");
+        safeLoadShader(texturing_shader, istreambuf_range<char>(vert), istreambuf_range<char>(frag));
+    }
 
     // FIXME : rekompilacja psuje uniformy!
 //	shader.Compile();
@@ -133,108 +168,162 @@ void initShadersEngine()
 
 void initResources()
 {
-    try {
-        std::ifstream file ("../Data/terrain.png", std::ios::binary);
-        if (!file)
-            throw std::runtime_error("terrain.png file not open");
+    auto safeLoadImage = [](std::string const& path, bool srgb) -> engine::Image {
+        try {
+            std::ifstream file (path, std::ios::binary);
+            if (!file)
+            throw std::runtime_error(path + " file not open");
 
-        // I prefer the shorter version
-        image = engine::Image::Load(istreambuf_range<char>(file), true);
-        //image = engine::Image::Load(boost::make_iterator_range(std::istreambuf_iterator<char>(file),
-        //													   std::istreambuf_iterator<char>()));
-    }
-    catch (std::exception const& e) {
-        ERROR_MESSAGE(e.what(), "initResources");
-        BREAKPOINT();
-    }
+            // I prefer the shorter version
+            return engine::Image::Load(istreambuf_range<char>(file), srgb);   
+            //image = engine::Image::Load(boost::make_iterator_range(std::istreambuf_iterator<char>(file),
+            //													   std::istreambuf_iterator<char>()));
+        }
+        catch (std::exception const& e) {
+            ERROR_MESSAGE(e.what(), "initResources");
+            BREAKPOINT();
+        }
+
+        return engine::Image();
+    };
+
+    image = safeLoadImage("../Data/terrain.png", true);
+    test_texture = safeLoadImage("../Data/models/cube/Untitled.png", true);
 
     const unsigned texUnitNum = 0;
     image.bind(texUnitNum);
     // pixels!
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    shader->SetTex("Texture", texUnitNum);
+    world_shader->SetTex("Texture", texUnitNum);
+
+    test_texture.bind();
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 }
 
-void keyboard()
-{
-    if (keys[sf::Keyboard::D])
-        Camera.Strafe(-0.2f);
+class App {
+public:
+    Console console;
+    lua::state luaVm;
+    World world;
+    Model fence;
+    Player player;
 
-    if (keys[sf::Keyboard::A])
-        Camera.Strafe(0.2f);
-
-    if (keys[sf::Keyboard::E])
-        Camera.LookDir.y += 5;
-    if (keys[sf::Keyboard::Q])
-        Camera.LookDir.y -= 5;
-
-    if (keys[sf::Keyboard::S])
-        Camera.Fly(-0.2f);
-    if (keys[sf::Keyboard::W]) {
-        //Camera.Fly(0.2f);
-        player->move();
-    }
-    if (keys[sf::Keyboard::Space]) {
-        //Camera.Position.y += 0.2f;
-        player->jump();
-        keys[sf::Keyboard::Space] = false;
-    }
-    if (keys[sf::Keyboard::C])
-        Camera.Position.y -= 0.2f;
-
-    if (keys[sf::Keyboard::R]) // remove
+    App()
+        : console(glm::ivec2(80, 4))
+        , luaVm([this](std::string const& error) {
+            this->console.write(error);
+        })
+        , world(world_shader)
+        , fence("../Data/models/fence2.obj", texturing_shader)
+        , player([this](Minefield::WorldCoord const& wc) {
+            return (world.get(wc).value) ? false : true;
+        })
     {
-        glm::mat4 RMatrix = engine::Camera::CreateRotation(Camera.LookDir.x, Camera.LookDir.y, 0.f);
-        glm::vec3 NormV (RMatrix[0].z, RMatrix[1].z, RMatrix[2].z);
-        NormV *= -1.f;
-        
-        auto result = w.raycast(Camera.Position, NormV, 50.f, World::STOP_ON_FIRST);
-        if (!result.empty())
-        {
-            w.set(result.back(), 0);
-            w.recalcInstances();
+        console.setCallback([this](std::string const& s){
+            this->luaVm.eval(s);
+        });
+
+        luaVm.register_function("exit", [this]{ this->console.write("OMG EXIT"); });
+        luaVm.register_function("print", [this](std::string s){ this->console.write(std::move(s)); });
+        luaVm.register_function("recalc", [this]{ this->world.recalcInstances(); });
+        luaVm.register_function("recalc_full", [this]{ this->world.recalcInstances(true); });
+        luaVm.register_function("save", [this]{ this->world.saveToFile("world.mcw"); });
+        luaVm.register_function("load", [this]{ this->world.loadFromFile("world.mcw"); });
+        luaVm.register_function("set", [this](int x, int y, int z, int v) { world.set(Minefield::WorldCoord(x,y,z), v); });
+        luaVm.register_function("get", [this](int x, int y, int z) { return static_cast<int>(world.get(Minefield::WorldCoord(x,y,z)).value); });
+        luaVm.register_function("fly", [this]{ player.flying = !player.flying; });
+
+        init();
+        initShadersEngine();
+        initResources();
+
+        world.init();
+        world.recalcInstances();
+    }
+
+    void keyboard()
+    {
+        if (keys[sf::Keyboard::D]) {
+            player.move(Player::Direction::StrafeRight);
+            //Camera.Strafe(-0.2f);
         }
 
-        g_L->set(Camera.Position, Camera.Position + NormV * 30.f);
-        keys[sf::Keyboard::R] = false;
-    }
-    if (keys[sf::Keyboard::T]) // add
-    {
-        glm::mat4 RMatrix = engine::Camera::CreateRotation(Camera.LookDir.x, Camera.LookDir.y, 0.f);
-        glm::vec3 NormV (RMatrix[0].z, RMatrix[1].z, RMatrix[2].z);
-        NormV *= -1.f;
-        
-        /*auto result = w.raycast(Camera.Position, NormV, 50.f,
-            World::INCLUDE_EMPTY | World::STOP_ON_FIRST | World::INCLUDE_FIRST);
-        if (result.size() > 1)
-        {
-            w.set(result[result.size()-2], 9);
-            w.recalcInstances();
-        }*/
-
-        auto result = w.raycast(Camera.Position, NormV, 30.f,
-            World::INCLUDE_EMPTY | World::INCLUDE_FIRST);
-
-        for(auto const & c :result){
-            w.set(c,9);
+        if (keys[sf::Keyboard::A]) {
+            player.move(Player::Direction::StrafeLeft);
+            //Camera.Strafe(0.2f);
         }
 
-        w.recalcInstances();
+        if (keys[sf::Keyboard::S]) {
+            //Camera.Fly(-0.2f);
+            player.move(Player::Direction::Back);
+        }
+        if (keys[sf::Keyboard::W]) {
+            //Camera.Fly(0.2f);
+            player.move(Player::Direction::Forward);
+        }
+        if (keys[sf::Keyboard::Space]) {
+            //Camera.Position.y += 0.2f;
+            player.jump();
+            keys[sf::Keyboard::Space] = false;
+        }
+        if (keys[sf::Keyboard::C])
+            Camera.Position.y -= 0.2f;
 
-        g_L->set(Camera.Position, Camera.Position + NormV * 20.f);
-        keys[sf::Keyboard::T] = false;
+        if (keys[sf::Keyboard::R]) // remove
+        {
+            glm::mat4 RMatrix = engine::Camera::CreateRotation(Camera.LookDir.x, Camera.LookDir.y, 0.f);
+            glm::vec3 NormV (RMatrix[0].z, RMatrix[1].z, RMatrix[2].z);
+            NormV *= -1.f;
+        
+            auto result = world.raycast(Camera.Position, NormV, 50.f, World::STOP_ON_FIRST);
+            if (!result.empty())
+            {
+                world.set(result.back(), 0);
+                world.recalcInstances();
+            }
+
+            g_L->set(Camera.Position, Camera.Position + NormV * 30.f);
+            keys[sf::Keyboard::R] = false;
+        }
+        if (keys[sf::Keyboard::T]) // add
+        {
+            glm::mat4 RMatrix = engine::Camera::CreateRotation(Camera.LookDir.x, Camera.LookDir.y, 0.f);
+            glm::vec3 NormV (RMatrix[0].z, RMatrix[1].z, RMatrix[2].z);
+            NormV *= -1.f;
+        
+            auto result = world.raycast(Camera.Position, NormV, 50.f,
+                World::INCLUDE_EMPTY | World::STOP_ON_FIRST | World::INCLUDE_FIRST);
+            if (result.size() > 1)
+            {
+                world.set(result[result.size()-2], 9);
+                world.recalcInstances();
+            }
+
+            /*auto result = world.raycast(Camera.Position, NormV, 30.f,
+                World::INCLUDE_EMPTY | World::INCLUDE_FIRST | World::STOP_ON_FIRST);
+
+            for(auto const & c :result){
+                world.set(c,9);
+            }
+            world.recalcInstances();
+            */
+
+            g_L->set(Camera.Position, Camera.Position + NormV * 20.f);
+            keys[sf::Keyboard::T] = false;
+        }
+
+        if (keys[sf::Keyboard::Escape])
+            g_Run = false;
+    }
+    void mouse(double dmx, double dmy)
+    {
+        Camera.LookDir.y += dmx * 50.0;
+        Camera.LookDir.x += dmy * 50.0;
     }
 
-    if (keys[sf::Keyboard::Escape])
-        g_Run = false;
-}
-
-void mouse(double dmx, double dmy)
-{
-    Camera.LookDir.y += dmx * 50.0;
-    Camera.LookDir.x += dmy * 50.0;
-}
+};
 
 
 #ifdef MINICRAFT_WINDOWS
@@ -246,18 +335,12 @@ int WINAPI WinMain (HINSTANCE hInstance,
 int main()
 #endif
 {
-    ERROR_MESSAGE("hello", "hello");
+    //ERROR_MESSAGE("hello", "hello");
     sf::Window window(sf::VideoMode(ScreenXSize, ScreenYSize), "Minicraft v0.3", 7, sf::ContextSettings(24, 0, 0, 3, 3));
 
     window.setMouseCursorVisible(false);
 
     glewInit();
-
-    init();
-    initShadersEngine();
-    initResources();
-    w.init();
-    w.recalcInstances();
 
     Line L[3];
     g_L = &L[2];
@@ -265,29 +348,13 @@ int main()
     L[1].set(glm::vec3(-0.05f, 0.f, 0.f), glm::vec3(0.05f, 0.f, 0.f));
     L[2].set(glm::vec3(-0.05f, 0.f, 0.f), glm::vec3(0.05f, 0.f, 0.f));
 
-    Camera.Position.y += 20.f;
+    App app;
 
     Font font;
-    player = std::unique_ptr<Player>(new Player([](Minefield::WorldCoord const& wc) {
-        return (w.get(wc).value) ? false : true;
-    }));
-    player->setPosition(Camera.Position);
-    player->setDirection(Camera.LookDir);
+    app.player.setDirection(Camera.LookDir);
 
     FullscreenQuad fq;
 
-    Console console(glm::ivec2(80, 4));
-    console.setCallback([&console](std::string const& s){
-        if (s == "exit")
-            console.write("OMG EXIT");
-        else if (s == "recalc")
-            w.recalcInstances();
-        else if (s == "save")
-            w.saveToFile("world.mcw");
-        else if (s == "load") {
-            w.loadFromFile("world.mcw");
-        }
-    });
 
     namespace tex_desc = engine::texture_desc;
 
@@ -311,22 +378,13 @@ int main()
         BREAKPOINT();
 
 
-    // temporary test lines
-    // x-line
-    for (int j = -5; j < 5; ++j)
-        for (int i = -5; i < 5; ++i) {
-            w.set(Minefield::WorldCoord(i*24, 1, j*24), 2);
+    // temporary surrounding generation
+    for (int j = -1; j < 1; ++j)
+        for (int i = -1; i < 1; ++i) {
+            app.world.set(Minefield::WorldCoord(i*24, 1, j*24), 2);
         }
 
-    /*// y-line
-    for (int i = -2; i < 5; i++) {
-        w.set(World::CubePos(i, 2, 1), 2);
-    }
-    // z-line
-    for (int i = -2; i < 5; i++) {
-        w.set(World::CubePos(i, 5, 1), 2);
-    }*/
-    w.recalcInstances();
+    app.world.recalcInstances();
 
     while (window.isOpen())
     {
@@ -345,7 +403,7 @@ int main()
                     if (event.text.unicode == '\r') // ignore newlines
                         continue;
 
-                    console.inputCharacter(event.text.unicode);
+                    app.console.inputCharacter(event.text.unicode);
                 }
             }
             else {
@@ -361,9 +419,9 @@ int main()
 
                 if (consoleOn) {
                     if (event.key.code == sf::Keyboard::Return)
-                        console.enter();
+                        app.console.enter();
                     else if (event.key.code == sf::Keyboard::BackSpace)
-                        console.backspace();
+                        app.console.backspace();
                 } else {
                     keys[event.key.code] = false;
                 }
@@ -382,22 +440,22 @@ int main()
         }
 
         // updates:
-        player->gravity();
-        Camera.Position = player->getPosition();
+        app.player.gravity();
+        Camera.Position = app.player.getPosition();
         // compensate for eye height
-        Camera.Position.y += 1.5f;
-        player->setDirection(Camera.LookDir);
+        Camera.Position.y += 1.620f;
+        app.player.setDirection(Camera.LookDir);
 
         if (active)
         {
-            keyboard();
+            app.keyboard();
             sf::Vector2i mouseP = sf::Mouse::getPosition();
             sf::Vector2f mouseNormalized;
 
             mouseNormalized.x = (mouseP.x - ScreenXSize/2) / (float)(ScreenXSize/2);
             mouseNormalized.y = (mouseP.y - ScreenYSize/2) / (float)(ScreenYSize/2);
 
-            mouse(mouseNormalized.x, mouseNormalized.y);
+            app.mouse(mouseNormalized.x, mouseNormalized.y);
             sf::Mouse::setPosition(sf::Vector2i(ScreenXSize/2, ScreenYSize/2));
 
             // rendering (pre-pass)
@@ -409,13 +467,21 @@ int main()
 
             Camera.CalculateView();	
             glm::mat4 View = Camera.GetViewMat();
-            shader->SetUniform("View", View);
-            shader->SetUniform("Eye", Camera.Position);
+            world_shader->SetUniform("View", View);
+            world_shader->SetUniform("Eye", Camera.Position);
 
             // world (cubes)
             image.bind(0);
             glEnable(GL_DEPTH_TEST);
-            w.draw();
+            app.world.draw();
+
+            trivial_shader->SetUniform("View", View);
+
+            texturing_shader->SetUniform("View", View);
+            texturing_shader->SetUniform("Eye", Camera.Position);
+            // test fence
+            test_texture.bind(0);
+            app.fence.draw();
 
             // crosshair
             L[0].draw(glm::mat4(1.0), glm::mat4(1.0));
@@ -440,7 +506,7 @@ int main()
 
             mainTexture.bind(1);
         
-            auto result = w.raycast(Camera.Position, NormV, 20.f, World::STOP_ON_FIRST);
+            auto result = app.world.raycast(Camera.Position, NormV, 20.f, World::STOP_ON_FIRST);
             if (!result.empty()) {
                 std::stringstream s;
                 s << "[" << result.back().x << ", " << result.back().y << ", " << result.back().z << "]";
@@ -451,7 +517,7 @@ int main()
             //player position 
             {
                 std::stringstream s;
-                glm::vec3 pp = player->getPosition();
+                glm::vec3 pp = app.player.getPosition();
                 s << "[" << pp.x << ", " << pp.y << ", " << pp.z << "]";
                 font.draw(s.str(), glm::vec2(10.f, 30.f));
             }
@@ -462,10 +528,10 @@ int main()
 
             // CONSOLE
             if (consoleOn) {
-                auto const& cbuf = console.getBuffer();
+                auto const& cbuf = app.console.getBuffer();
                 glm::vec2 position (10.f, 760.f);
 
-                font.draw("> " + console.getInputBuffer(), position);
+                font.draw("> " + app.console.getInputBuffer(), position);
 
                 for (auto const& line : cbuf) {
                     position += glm::vec2(0.f, -30.f);

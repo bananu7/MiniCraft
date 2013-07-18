@@ -17,6 +17,7 @@
     <ClInclude Include="src\helpers.hpp" />
     <ClInclude Include="src\Line.hpp" />
     <ClInclude Include="src\Minefield.h" />
+    <ClInclude Include="src\Model.h" />
     <ClInclude Include="src\Player.h" />
     <ClInclude Include="src\simplex.h" />
     <ClInclude Include="src\World.h" />
@@ -30,6 +31,8 @@
   <ItemGroup>
     <None Include="Data\shaders\main_cubes.frag" />
     <None Include="Data\shaders\main_cubes.vert" />
+    <None Include="Data\shaders\texturing_and_light.frag" />
+    <None Include="Data\shaders\texturing_and_light.vert" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{9F7D6D30-DFA3-4171-8931-659FA68D7804}</ProjectGuid>
@@ -62,14 +65,14 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\PROJECTS\Engine\Engine\include;C:\PROJECTS\Engine\dependencies\glm-0.9.4.1;C:\PROJECTS\Engine\dependencies\pugixml-1.2\src;C:\PROJECTS\Engine\dependencies\SFML-2.0\include;C:\PROJECTS\MiniCraft\deps\mNBT\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\PROJECTS\Engine\Debug;C:\PROJECTS\MiniCraft\deps\mNBT\Debug;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\PROJECTS\Engine\Engine\include;C:\PROJECTS\Engine\dependencies\glm-0.9.4.1;C:\PROJECTS\Engine\dependencies\pugixml-1.2\src;C:\PROJECTS\Engine\dependencies\SFML-2.0\include;$(SolutionDir)\deps\lundi;C:\DEV\Lua5.1\include;C:\DEV\Assimp\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\PROJECTS\Engine\Debug;C:\DEV\Lua5.1\lib;C:\DEV\Assimp\lib\x86;$(LibraryPath)</LibraryPath>
     <IntDir>$(Configuration)\intermediate\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\PROJECTS\Engine\Engine\include;C:\PROJECTS\Engine\dependencies\glm-0.9.4.1;C:\PROJECTS\Engine\dependencies\pugixml-1.2\src;C:\PROJECTS\Engine\dependencies\SFML-2.0\include;C:\PROJECTS\MiniCraft\deps\mNBT\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\PROJECTS\Engine\Release;C:\PROJECTS\MiniCraft\deps\mNBT;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\PROJECTS\Engine\Engine\include;C:\PROJECTS\Engine\dependencies\glm-0.9.4.1;C:\PROJECTS\Engine\dependencies\pugixml-1.2\src;C:\PROJECTS\Engine\dependencies\SFML-2.0\include;C:\PROJECTS\MiniCraft\deps\mNBT\include;$(SolutionDir)\deps\lundi;C:\DEV\Lua5.1\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\PROJECTS\Engine\Release;C:\PROJECTS\MiniCraft\deps\mNBT;C:\DEV\Lua5.1\lib;$(LibraryPath)</LibraryPath>
     <IntDir>$(Configuration)\intermediate\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -89,7 +92,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>opengl32.lib;Engine.lib;mNBT.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;Engine.lib;lua5.1.lib;assimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>msvcrt</IgnoreSpecificDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
@@ -110,7 +113,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>opengl32.lib;Engine.lib;mNBT.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;Engine.lib;mNBT.lib;lua5.1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
