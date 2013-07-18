@@ -13,15 +13,16 @@ Right now Minicraft runs on SFML Window creation and Input; I don't use prebuilt
 I'm putting these at the top; please, don't get this wrong *again*
 
 1. Make *absolutely* sure you got `develop-2.0` branch of Engine
-2. Neither FBX SDK nor Lua is required to build at this moment; they are explicitly marked as optional by appropriate `#ifdef` clauses inside the files using them.
-3. SOIL image library isn't used; it has been replaced alltogether by FreeImage. If you happen to stumble on `ImageData.cpp`, just delete it.
-4. The same goes for rapidxml parser (replaced by PugiXML) and `Scene.cpp`
+2. SOIL image library isn't used; it has been replaced alltogether by FreeImage. If you happen to stumble on `ImageData.cpp`, just delete it.
+3. The same goes for rapidxml parser (replaced by PugiXML) and `Scene.cpp`
 
 ## New Build ##
 
 You can now build Minicraft on both linux and windows using provided SConstruct file
 (requires Python and SCons). It will use default compiler on linux, and is set up for MinGW on Windows.
 It's pretty easy to change it for MSVS toolchain generation and I will add this in the future.
+
+Right now it depends on `Lua 5.1`, `FreeImage`, `glm` and `GLEW`.
 
 Simply `cd` to the project folder and type:
 
