@@ -19,10 +19,43 @@
     <ClInclude Include="src\Minefield.h" />
     <ClInclude Include="src\Model.h" />
     <ClInclude Include="src\Player.h" />
+    <ClInclude Include="src\ProgramWithGLM.hpp" />
     <ClInclude Include="src\simplex.h" />
     <ClInclude Include="src\World.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="deps\SFML-2.0\src\System\Clock.cpp" />
+    <ClCompile Include="deps\SFML-2.0\src\System\Err.cpp" />
+    <ClCompile Include="deps\SFML-2.0\src\System\Lock.cpp" />
+    <ClCompile Include="deps\SFML-2.0\src\System\Mutex.cpp" />
+    <ClCompile Include="deps\SFML-2.0\src\System\Sleep.cpp" />
+    <ClCompile Include="deps\SFML-2.0\src\System\String.cpp" />
+    <ClCompile Include="deps\SFML-2.0\src\System\Thread.cpp" />
+    <ClCompile Include="deps\SFML-2.0\src\System\ThreadLocal.cpp" />
+    <ClCompile Include="deps\SFML-2.0\src\System\Time.cpp" />
+    <ClCompile Include="deps\SFML-2.0\src\System\Win32\ClockImpl.cpp" />
+    <ClCompile Include="deps\SFML-2.0\src\System\Win32\MutexImpl.cpp" />
+    <ClCompile Include="deps\SFML-2.0\src\System\Win32\SleepImpl.cpp" />
+    <ClCompile Include="deps\SFML-2.0\src\System\Win32\ThreadImpl.cpp" />
+    <ClCompile Include="deps\SFML-2.0\src\System\Win32\ThreadLocalImpl.cpp" />
+    <ClCompile Include="deps\SFML-2.0\src\Window\Context.cpp" />
+    <ClCompile Include="deps\SFML-2.0\src\Window\GlContext.cpp" />
+    <ClCompile Include="deps\SFML-2.0\src\Window\GlResource.cpp" />
+    <ClCompile Include="deps\SFML-2.0\src\Window\Joystick.cpp" />
+    <ClCompile Include="deps\SFML-2.0\src\Window\JoystickManager.cpp" />
+    <ClCompile Include="deps\SFML-2.0\src\Window\Keyboard.cpp" />
+    <ClCompile Include="deps\SFML-2.0\src\Window\Mouse.cpp" />
+    <ClCompile Include="deps\SFML-2.0\src\Window\VideoMode.cpp" />
+    <ClCompile Include="deps\SFML-2.0\src\Window\Win32\InputImpl.cpp" />
+    <ClCompile Include="deps\SFML-2.0\src\Window\Win32\JoystickImpl.cpp" />
+    <ClCompile Include="deps\SFML-2.0\src\Window\Win32\VideoModeImpl.cpp" />
+    <ClCompile Include="deps\SFML-2.0\src\Window\Win32\WglContext.cpp" />
+    <ClCompile Include="deps\SFML-2.0\src\Window\Win32\WindowImplWin32.cpp" />
+    <ClCompile Include="deps\SFML-2.0\src\Window\Window.cpp" />
+    <ClCompile Include="deps\SFML-2.0\src\Window\WindowImpl.cpp" />
+    <ClCompile Include="src\Engine\Camera.cpp" />
+    <ClCompile Include="src\Engine\CameraAdds.cpp" />
+    <ClCompile Include="src\Engine\Image.cpp" />
     <ClCompile Include="src\main_sfml.cpp" />
     <ClCompile Include="src\Minefield.cpp" />
     <ClCompile Include="src\simplex.cpp" />
@@ -65,8 +98,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\PROJECTS\Engine\Engine\include;C:\PROJECTS\Engine\dependencies\glm-0.9.4.1;C:\PROJECTS\Engine\dependencies\pugixml-1.2\src;C:\PROJECTS\Engine\dependencies\SFML-2.0\include;$(SolutionDir)\deps\lundi;C:\DEV\Lua5.1\include;C:\DEV\Assimp\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\PROJECTS\Engine\Debug;C:\DEV\Lua5.1\lib;C:\DEV\Assimp\lib\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)\deps\GLDR\src\;C:\PROJECTS\Engine\dependencies\glm-0.9.4.1;C:\PROJECTS\Engine\dependencies\pugixml-1.2\src;C:\PROJECTS\Engine\dependencies\SFML-2.0\include;$(SolutionDir)\deps\lundi;C:\DEV\Lua5.1\include;C:\DEV\Assimp\include;C:\DEV\glsdk_0.5.0\glload\include;C:\DEV\FreeImage\Dist;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\DEV\Lua5.1\lib;C:\DEV\Assimp\lib\x86;C:\DEV\glsdk_0.5.0\glload\lib\1700\;C:\DEV\FreeImage\Dist;$(LibraryPath)</LibraryPath>
     <IntDir>$(Configuration)\intermediate\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -92,7 +125,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>opengl32.lib;Engine.lib;lua5.1.lib;assimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;lua5.1.lib;assimp.lib;glloadD.lib;winmm.lib;freeimage.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>msvcrt</IgnoreSpecificDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>

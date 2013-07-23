@@ -3,16 +3,15 @@
 #include <map>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <GL/glew.h>
 #include <fstream>
-#include <Image.h>
+#include "Engine/Image.h"
 #include "helpers.hpp"
-#include <Config.h>
+#include "Engine/Config.h"
 #include <pugixml.hpp>
 #include <algorithm>
 #include <exception>
 #include <memory>
-#include <Shader.h>
+#include "ProgramWithGLM.hpp"
 #include <VertexAttributeArray.h>
 #include <VertexBuffer.h>
 
@@ -25,13 +24,13 @@ using pugi::xml_attribute;
 #define NL "\n"
 
 class Font {
-    engine::VertexBuffer vbo;
-    engine::VertexAttributeArray vao;
-    engine::Program program;
+    gldr::VertexBuffer<> vbo;
+    gldr::VertexAttributeArray vao;
+    ProgramGLM program;
 
     void _renderGlyph (int glyph, glm::vec2 const& position) {
-        program.SetUniform("Position", position);
-        glDrawArrays(GL_TRIANGLE_STRIP, glyph, 4);
+        program.setUniform("Position", position);
+        gl::DrawArrays(gl::TRIANGLE_STRIP, glyph, 4);
     }
 
     void _initShaders() {
@@ -66,39 +65,18 @@ class Font {
         typedef unsigned char uc;
 
         {
-            auto vs = std::make_shared<engine::VertexShader>(vert);
-            vs->Compile();
-            auto s = vs->Status();
-            if (!s.empty())
-                BREAKPOINT();
-            program.AttachShader(vs);
+            auto vs = gldr::VertexShader(vert);
+            program.attachShader(vs);
         }
         {
-            auto fs = std::make_shared<engine::FragmentShader>(frag);
-            fs->Compile();
-            auto s = fs->Status();
-            if (!s.empty())
-                BREAKPOINT();
-            program.AttachShader(fs);
+            auto fs = gldr::FragmentShader(frag);
+            program.attachShader(fs);
         }
         
-        auto status = program.Link();
-        program.Bind();
-        program.SetTex("tex", 0);
-        program.SetTex("accum", 1);
-
-        try {
-            if (!status.empty())
-                throw std::runtime_error(status);
-            if (!program)
-                throw std::runtime_error("Program not valid");
-        }
-        catch (std::exception const& e)
-        {
-            //MessageBox(0, e.what(), "Program link error", MB_OK | MB_ICONERROR);
-            BREAKPOINT();
-        }
-        
+        program.link();
+        program.bind();
+        program.setTex("tex", 0);
+        program.setTex("accum", 1);
     }
 
     class FontDescriptor {
@@ -208,15 +186,15 @@ class Font {
             vboData.push_back(glm::vec2(p.second.x + p.second.width, p.second.y + p.second.height) / ts);
         }
 
-        vao.Bind();
-        vbo.Bind();
+        vao.bind();
+        vbo.bind();
 
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2) * 2, nullptr);
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2) * 2, (void*)(sizeof(glm::vec2)));
+        gl::EnableVertexAttribArray(0);
+        gl::VertexAttribPointer(0, 2, gl::FLOAT, gl::FALSE_, sizeof(glm::vec2) * 2, nullptr);
+        gl::EnableVertexAttribArray(1);
+        gl::VertexAttribPointer(1, 2, gl::FLOAT, gl::FALSE_, sizeof(glm::vec2) * 2, (void*)(sizeof(glm::vec2)));
 
-        vbo.LoadData(vboData.data(), vboData.size() * sizeof(glm::vec2));
+        vbo.data(vboData);
 
         _initShaders();
     }
@@ -224,19 +202,19 @@ class Font {
 public:
     void draw (std::string const& text, glm::vec2 position) {
         // fixed width:
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_CULL_FACE);
+        gl::Disable(gl::DEPTH_TEST);
+        gl::Disable(gl::CULL_FACE);
 
-        vao.Bind();
-        vbo.Bind();
+        vao.bind();
+        vbo.bind();
 
         glm::mat4 Proj = glm::ortho(0.f, 1280.f, 800.f, 0.f);
-        program.SetUniform("Projection", Proj);
-        program.Bind();
-        program.SetTex("tex", 0);
-        texture.bind(0);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        program.setUniform("Projection", Proj);
+        program.bind();
+        program.setTex("tex", 0);
+        texture.bindToUnit(0);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST);
 
         for (char c : text) {
             auto it = fd.getData().find(c);
@@ -248,7 +226,7 @@ public:
             }
         }
 
-        //glEnable(GL_CULL_FACE);
+        //glEnable(gl::CULL_FACE);
     }
 
     Font () {

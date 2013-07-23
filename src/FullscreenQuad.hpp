@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Config.h>
+#include "Engine/Config.h"
 
 #include <VertexBuffer.h>
 #include <VertexAttributeArray.h>
@@ -13,14 +13,14 @@
 
 class FullscreenQuad
 {
-    engine::VertexBuffer vbo;
-    engine::VertexAttributeArray vao;
-    engine::Program program;
+    gldr::VertexBuffer<> vbo;
+    gldr::VertexAttributeArray vao;
+    ProgramGLM program;
 
 public:
-    FullscreenQuad() : vbo(engine::VertexBuffer::DATA_BUFFER, engine::VertexBuffer::STATIC_DRAW)
+    FullscreenQuad() : vbo(gldr::VertexBuffer<>::Usage::STATIC_DRAW)
     {
-        vao.Bind();
+        vao.bind();
 
         // Vertex shader is trivial; it just covers the whole screen
         std::string vert = 
@@ -77,63 +77,44 @@ public:
         typedef unsigned char uc;
 
         {
-            auto vs = std::make_shared<engine::VertexShader>(vert);
-            vs->Compile();
-            auto s = vs->Status();
-            if (!s.empty())
-                BREAKPOINT();
-            program.AttachShader(vs);
+            auto vs = gldr::VertexShader(vert);
+            program.attachShader(vs);
         }
         {
-            auto fs = std::make_shared<engine::FragmentShader>(frag);
-            fs->Compile();
-            std::string s = fs->Status();
-            if (!s.empty())
-                BREAKPOINT();
-            program.AttachShader(fs);
+            auto fs = gldr::FragmentShader(frag);
+            program.attachShader(fs);
         }
         
-        auto status = program.Link();
-        program.Bind();
+        program.link();
+        program.bind();
 
-        try {
-            if (!status.empty())
-                throw std::runtime_error(status);
-            if (!program)
-                throw std::runtime_error("Program not valid");
-        }
-        catch (std::exception const& e)
-        {
-            //MessageBox(0, e.what(), "Program link error", MB_OK | MB_ICONERROR);
-            BREAKPOINT();
-        }
-
-        program.SetTex("screen", 0);
+        program.setTex("screen", 0);
         
         // vertex specification
-        vao.Bind();
-        std::array<glm::vec2, 8> a;
+        vao.bind();
+        //std::array<glm::vec2, 8> a;
+        std::vector<glm::vec2> a(8);
         a[0] = glm::vec2(-1., -1.); a[1] = glm::vec2(0., 0.); 
         a[2] = glm::vec2(1., -1.);  a[3] = glm::vec2(1., 0.); 
         a[4] = glm::vec2(-1., 1.);  a[5] = glm::vec2(0., 1.); 
         a[6] = glm::vec2(1., 1.);   a[7] = glm::vec2(1., 1.); 
-        vbo.LoadData(a.data(), a.size() * sizeof(glm::vec2));
-        vbo.Bind();
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2)*2, 0);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2)*2, (void*)(sizeof(glm::vec2)));
+        vbo.data(a);
+        vbo.bind();
+        gl::VertexAttribPointer(0, 2, gl::FLOAT, gl::FALSE_, sizeof(glm::vec2)*2, 0);
+        gl::VertexAttribPointer(1, 2, gl::FLOAT, gl::FALSE_, sizeof(glm::vec2)*2, (void*)(sizeof(glm::vec2)));
     }
 
     void draw ()
     {
-        vao.Bind();
-        vbo.Bind();
-        program.Bind();
-        glEnableVertexAttribArray(0);
-        glEnableVertexAttribArray(1);
-        glDisable(GL_DEPTH_TEST);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        glEnable(GL_DEPTH_TEST);
-        glDisableVertexAttribArray(0);
-        glDisableVertexAttribArray(1);
+        vao.bind();
+        vbo.bind();
+        program.bind();
+        gl::EnableVertexAttribArray(0);
+        gl::EnableVertexAttribArray(1);
+        gl::Disable(gl::DEPTH_TEST);
+        gl::DrawArrays(gl::TRIANGLE_STRIP, 0, 4);
+        gl::Enable(gl::DEPTH_TEST);
+        gl::DisableVertexAttribArray(0);
+        gl::DisableVertexAttribArray(1);
     }
 };

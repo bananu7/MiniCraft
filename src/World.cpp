@@ -1,10 +1,9 @@
 #include "World.h"
 #include "Shader.h"
-#include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <Config.h>
-
+#include "Engine/Config.h"
+#include "ProgramWithGLM.hpp"
 
 glm::vec2 offset (unsigned value) {
     return glm::vec2 (((value-1) % 16) / 16.0, ((value-1) / 16) / 16.0);
@@ -25,42 +24,34 @@ glm::vec2 calculateTexCoords (Minefield::BlockType block, unsigned wall)
 }
 
 World::DisplayChunk::DisplayChunk(Minefield::OuterChunkCoord c) :
-    positionVbo(engine::VertexBuffer::DATA_BUFFER, engine::VertexBuffer::STATIC_DRAW),
-    texcoordVbo(engine::VertexBuffer::DATA_BUFFER, engine::VertexBuffer::STATIC_DRAW),
-    normalVbo(engine::VertexBuffer::DATA_BUFFER, engine::VertexBuffer::STATIC_DRAW),
+    positionVbo(gldr::VertexBuffer<>::Usage::STATIC_DRAW),
+    texcoordVbo(gldr::VertexBuffer<>::Usage::STATIC_DRAW),
+    normalVbo(gldr::VertexBuffer<>::Usage::STATIC_DRAW),
     visibleWallsCount(0),
     coord(std::move(c))
 { 
-    vao.Bind();
+    vao.bind();
     //vertex-data position
-    positionVbo.Bind();
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+    positionVbo.bind();
+    vao.enableAttributeArray(0);
+    gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE_, 3 * sizeof(float), 0);
 
     //vertex-data texcoords
-    texcoordVbo.Bind();
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
+    texcoordVbo.bind();
+    vao.enableAttributeArray(1);
+    gl::VertexAttribPointer(1, 2, gl::FLOAT, gl::FALSE_, 2 * sizeof(float), 0);
 
-    normalVbo.Bind();
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
-
-    GLenum e = glGetError();
-    if (e != GL_NO_ERROR)
-        BREAKPOINT();
+    normalVbo.bind();
+    vao.enableAttributeArray(2);
+    gl::VertexAttribPointer(2, 3, gl::FLOAT, gl::FALSE_, 3 * sizeof(float), 0);
 }
 
 void World::DisplayChunk::draw () {
-    vao.Bind();
-    //glDisable(GL_CULL_FACE);
-    glDrawArrays(GL_TRIANGLES, 0, visibleWallsCount * 6);
-    GLenum e = glGetError();
-    if (e != GL_NO_ERROR)
-        BREAKPOINT();
-
-    //glDrawArraysInstancedBaseInstance(GL_TRIANGLES, 0, 36, visibleCubesCount, 0);
-    //glDrawArraysInstanced(GL_TRIANGLES, 0, 36, visibleCubesCount);
+    vao.bind();
+    //glDisable(gl::CULL_FACE);
+    gl::DrawArrays(gl::TRIANGLES, 0, visibleWallsCount * 6);
+    //glDrawArraysInstancedBaseInstance(gl::TRIANGLES, 0, 36, visibleCubesCount, 0);
+    //glDrawArraysInstanced(gl::TRIANGLES, 0, 36, visibleCubesCount);
 }
 
 void World::init()
@@ -202,9 +193,9 @@ void World::_recalcChunk(World::DisplayChunk & c) {
                 }
             }
 
-    c.positionVbo.LoadData(c.Positions.data(), c.Positions.size() * sizeof(glm::vec3));
-    c.texcoordVbo.LoadData(Texcoords.data(), Texcoords.size() * sizeof(glm::vec2));
-    c.normalVbo.LoadData(Normals.data(), Normals.size() * sizeof(glm::vec3));
+    c.positionVbo.data(c.Positions);
+    c.texcoordVbo.data(Texcoords);
+    c.normalVbo.data(Normals);
 
     c.needsRecalc = false;
 }
@@ -245,11 +236,7 @@ void World::recalcInstances(bool force)
 
 void World::draw()
 {
-    GLenum e = glGetError();
-    if (e != GL_NO_ERROR)
-        BREAKPOINT();
-
-    shader->Bind();
+    shader->bind();
     for (auto & chunk : displayChunks) {
         chunk.second.draw();
     }
@@ -407,8 +394,8 @@ std::vector<Minefield::WorldCoord> World::raycast(glm::vec3 const& pos, glm::vec
     return Results;
 }
 
-World::World(std::shared_ptr<engine::Program> _shader) :
-    shader(std::move(_shader))
+World::World(std::shared_ptr<ProgramGLM> shader) :
+    shader(std::move(shader))
 {
 
 }

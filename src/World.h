@@ -2,6 +2,7 @@
 #include "Minefield.h"
 #include <VertexAttributeArray.h>
 #include <VertexBuffer.h>
+#include "ProgramWithGLM.hpp"
 #include <glm/glm.hpp>
 #include <vector>
 #include <memory>
@@ -13,8 +14,8 @@ class World
     struct DisplayChunk {
         unsigned visibleWallsCount;
         bool needsRecalc;
-        engine::VertexAttributeArray vao;
-        engine::VertexBuffer positionVbo, texcoordVbo, normalVbo;
+        gldr::VertexAttributeArray vao;
+        gldr::VertexBuffer<> positionVbo, texcoordVbo, normalVbo;
         Minefield::OuterChunkCoord coord;
         static const int size = Minefield::size;
 
@@ -34,15 +35,20 @@ class World
             needsRecalc(true)
         { }
         DisplayChunk (Minefield::OuterChunkCoord c);
+    private:
+        DisplayChunk(DisplayChunk const&) /*= delete*/;
     };
 
 private:
     Minefield field;
     // rendering
-    std::shared_ptr<engine::Program> shader;
+    std::shared_ptr<ProgramGLM> shader;
     std::unordered_map<Minefield::OuterChunkCoord, DisplayChunk, Minefield::CoordHash> displayChunks;
 
     void _recalcChunk(DisplayChunk & dc);
+
+    World(World&) /* =delete*/;
+    World& operator=(World&) /* =delete*/;
 
 public:
     void init();
@@ -62,5 +68,5 @@ public:
     void saveToFile (std::string const& path) const { field.saveToFile(path); }
     void loadFromFile (std::string const& path) { field.loadFromFile(path); recalcInstances(true); }
 
-    World(std::shared_ptr<engine::Program> shader);
+    World(std::shared_ptr<ProgramGLM> shader);
 };

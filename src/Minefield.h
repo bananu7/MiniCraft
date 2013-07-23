@@ -20,8 +20,7 @@ public:
     typedef Coord<InnerChunkCoordTag> InnerChunkCoord;
 
     template<typename Tag>
-    class Coord {
-    public:
+    struct Coord {
         int x, y, z;
         
         Coord() 
@@ -29,6 +28,9 @@ public:
         Coord(int _x, int _y, int _z)
             : x(_x), y(_y), z(_z) {
         }
+        Coord(Coord const& other)
+            : x(other.x), y(other.y), z(other.z)
+        { }
 
         void operator+= (Coord const& other) {
             x += other.x;
@@ -106,14 +108,15 @@ public:
         }
 
         Chunk () { }
+        Chunk(Chunk const& other) : data(other.data) { }
         Chunk (OuterChunkCoord const& ccoords);
 
         friend class Minefield;
     };
     
-    class CoordHash {
+    struct CoordHash {
         template<typename Tag>
-        std::size_t operator()(Coord<Tag> const& p)
+        std::size_t operator()(Coord<Tag> const& p) const
         {
             std::size_t seed = 0;
             boost::hash_combine(seed, p.x);
@@ -129,6 +132,10 @@ private:
     static int _innerChunkCoordFromOuterChunkCoord (int p);
 
     std::unordered_map<OuterChunkCoord, Chunk, CoordHash> data;
+    //std::map<OuterChunkCoord, Chunk> data;
+
+    Minefield(Minefield&) /* = delete*/;
+    Minefield& operator=(Minefield&) ;
 
 public:
     unsigned getSize () const { return size; }

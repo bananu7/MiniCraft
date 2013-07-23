@@ -1,0 +1,6 @@
+[submodule "deps/lundi"]
+	path = deps/lundi
+	url = git://github.com/lundiorg/lundi.git
+[submodule "deps/GLDR"]
+	path = deps/GLDR
+	url = git@github.com:GLDRorg/GLDR.git

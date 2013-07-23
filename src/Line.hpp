@@ -1,10 +1,10 @@
 #pragma once
 
-#include <Config.h>
+#include "Engine/Config.h"
 
 #include <VertexBuffer.h>
 #include <VertexAttributeArray.h>
-#include <Shader.h>
+#include <Program.hpp>
 
 #include <string>
 #include <array>
@@ -12,14 +12,14 @@
 #define NL "\n"
 
 class Line {
-    engine::VertexBuffer vbo;
-    engine::VertexAttributeArray vao;
-    engine::Program program;
+    gldr::VertexBuffer<> vbo;
+    gldr::VertexAttributeArray vao;
+    ProgramGLM program;
 
 public:
-    Line() : vbo(engine::VertexBuffer::DATA_BUFFER, engine::VertexBuffer::STATIC_DRAW)
+    Line() : vbo(gldr::VertexBuffer<>::Usage::STATIC_DRAW)
     {
-        vao.Bind();
+        vao.bind();
 
         std::string vert = 
         "#version 330 core"
@@ -39,57 +39,36 @@ public:
         NL "}" NL;
 
         {
-            auto vs = std::make_shared<engine::VertexShader>(vert);
-            vs->Compile();
-            auto s = vs->Status();
-            if (!s.empty())
-                BREAKPOINT();
-            program.AttachShader(vs);
+            auto vs = gldr::VertexShader(vert);
+            program.attachShader(vs);
         }
         {
-            auto fs = std::make_shared<engine::FragmentShader>(frag);
-            fs->Compile();
-            auto s = fs->Status();
-            if (!s.empty())
-                BREAKPOINT();
-            program.AttachShader(fs);
+            auto fs = gldr::FragmentShader(frag);
+            program.attachShader(fs);
         }
         
-        auto status = program.Link();
-        program.Bind();
-
-        try {
-            if (!status.empty())
-                throw std::runtime_error(status);
-            if (!program)
-                throw std::runtime_error("Program not valid");
-        }
-        catch (std::exception const& e)
-        {
-            //MessageBox(0, e.what(), "Program link error", MB_OK | MB_ICONERROR);
-            BREAKPOINT();
-        }
-        
+        program.link();
+        program.bind();
     }
 
     void set (glm::vec3 const& start, glm::vec3 const& end)
     {
-        vao.Bind();
-        std::array<glm::vec3, 2> a;
+        vao.bind();
+        std::vector<glm::vec3> a(2);
         a[0] = start;
         a[1] = end;
-        vbo.LoadData(a.data(), sizeof(glm::vec3) * 2);
-        vbo.Bind();
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+        vbo.data(a);
+        vbo.bind();
+        gl::EnableVertexAttribArray(0);
+        gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE_, 0, 0);
     }
     void draw (glm::mat4 const& projection, glm::mat4 const& view)
     {
-        vao.Bind();
-        program.SetUniform("Projection", projection);
-        program.SetUniform("View", view);
-        program.Bind();
+        vao.bind();
+        program.setUniform("Projection", projection);
+        program.setUniform("View", view);
+        program.bind();
         
-        glDrawArrays(GL_LINES, 0, 2);
+        gl::DrawArrays(gl::LINES, 0, 2);
     }
 };

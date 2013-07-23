@@ -4,6 +4,7 @@
 #include <assimp/postprocess.h>
 
 #include <glm/glm.hpp>
+#include <glload/gl_4_3.hpp>
 
 #include "VertexBuffer.h"
 #include "VertexAttributeArray.h"
@@ -16,9 +17,9 @@
 class Model {
     std::unique_ptr<const aiScene, decltype(&aiReleaseImport)> scene;
     //std::unique_ptr<const aiScene, void (*)(const aiScene*)> scene; works
-    engine::VertexBuffer vbo, texVbo, normVbo;
-    engine::VertexAttributeArray vao;
-    std::shared_ptr<engine::Program> shader;
+    gldr::VertexBuffer<> vbo, texVbo, normVbo;
+    gldr::VertexAttributeArray vao;
+    std::shared_ptr<ProgramGLM> shader;
     unsigned vertexCount;
 
     template<typename Functor>
@@ -39,8 +40,8 @@ class Model {
 
             // update transform
             //aiTransposeMatrix4(&m);
-            //glPushMatrix();
-            //glMultMatrixf((float*)&m);
+            //gl::ushMatrix();
+            //gl::ultMatrixf((float*)&m);
 
             // draw all meshes assigned to this node
             for (unsigned n = 0; n < node->mNumMeshes; ++n) {
@@ -49,9 +50,9 @@ class Model {
                 //apply_material(scene->mMaterials[mesh->mMaterialIndex]);
 
                 /*if(mesh->mNormals == NULL) {
-                    glDisable(GL_LIGHTING);
+                    gl::isable(gl::LIGHTING);
                 } else {
-                    glEnable(GL_LIGHTING);
+                    gl::nable(gl::LIGHTING);
                 }*/
 
                 for (unsigned t = 0; t < mesh->mNumFaces; ++t) {
@@ -61,7 +62,7 @@ class Model {
                     if (face->mNumIndices != 3)
                         throw std::runtime_error("Non-triangulised mesh provided!");
 
-                    //glBegin(face_mode);
+                    //gl::egin(face_mode);
 
                     // TEMP : non indexed mode on.
                     bool haveNormals = mesh->mNormals != nullptr;
@@ -104,37 +105,38 @@ class Model {
 
         recursiveIterate(addVertex, scene->mRootNode, scene.get());
 
-        vbo.LoadData(vertices.data(), vertices.size() * sizeof(glm::vec3));
-        normVbo.LoadData(normals.data(), normals.size() * sizeof(glm::vec3));
-        texVbo.LoadData(texCoords.data(), texCoords.size() * sizeof(glm::vec3));
+        vbo.data(vertices);
+        normVbo.data(normals);
+        texVbo.data(texCoords);
         vertexCount = vertices.size();
     }
 
 public:
 
-    Model(std::string const& path, std::shared_ptr<engine::Program> program)
+    Model(std::string const& path, std::shared_ptr<ProgramGLM> program)
         : scene(aiImportFile(path.c_str(),aiProcessPreset_TargetRealtime_MaxQuality), aiReleaseImport)
-        , vbo(engine::VertexBuffer::DATA_BUFFER, engine::VertexBuffer::STATIC_DRAW)
+        , vbo(gldr::VertexBuffer<>::Usage::STATIC_DRAW)
         , vertexCount(0u)
-        , shader(program)
+        , shader(std::move(program))
     {
         rebuildData();
-        vao.EnableAttributeArray(0);
-        vbo.Bind();
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-        vao.EnableAttributeArray(1);
-        texVbo.Bind();
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
-        vao.EnableAttributeArray(2);
-        normVbo.Bind();
-        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
+        vao.bind();
+        vao.enableAttributeArray(0);
+        vbo.bind();
+        gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE_, 0, 0);
+        vao.enableAttributeArray(1);
+        texVbo.bind();
+        gl::VertexAttribPointer(1, 2, gl::FLOAT, gl::FALSE_, 0, 0);
+        vao.enableAttributeArray(2);
+        normVbo.bind();
+        gl::VertexAttribPointer(2, 3, gl::FLOAT, gl::FALSE_, 0, 0);
     }
 
-    std::shared_ptr<engine::Program>& getShader() { return shader; }
+    std::shared_ptr<ProgramGLM>& getShader() { return shader; }
 
     void draw() {
-        shader->Bind();
-        vao.Bind();
-        glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+        shader->bind();
+        vao.bind();
+        gl::DrawArrays(gl::TRIANGLES, 0, vertexCount);
     }
 };

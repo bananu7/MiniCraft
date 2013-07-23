@@ -13,6 +13,24 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Legacy">
+      <UniqueIdentifier>{b1b8643d-25c0-4d39-b2be-a3e280b6500f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SFML">
+      <UniqueIdentifier>{0a514ccf-6408-4739-b6c1-5beea83e85ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SFML\Window">
+      <UniqueIdentifier>{5c985094-c2a2-4858-9624-b99594bf44e9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SFML\Window\Win32">
+      <UniqueIdentifier>{e5b0dcf7-f1ff-41c2-901e-9825784ab767}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SFML\System">
+      <UniqueIdentifier>{b704833b-a89f-4a32-802e-f6c9782eadac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SFML\System\Win32">
+      <UniqueIdentifier>{fa4ecc85-e1b2-48b5-9ace-1cc552237c02}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\simplex.h">
@@ -45,6 +63,9 @@
     <ClInclude Include="src\Model.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\ProgramWithGLM.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main_sfml.cpp">
@@ -58,6 +79,102 @@
     </ClCompile>
     <ClCompile Include="src\World.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Engine\Camera.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Engine\CameraAdds.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\SFML-2.0\src\Window\Win32\InputImpl.cpp">
+      <Filter>SFML\Window\Win32</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\SFML-2.0\src\Window\Win32\JoystickImpl.cpp">
+      <Filter>SFML\Window\Win32</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\SFML-2.0\src\Window\Win32\VideoModeImpl.cpp">
+      <Filter>SFML\Window\Win32</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\SFML-2.0\src\Window\Win32\WglContext.cpp">
+      <Filter>SFML\Window\Win32</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\SFML-2.0\src\Window\Win32\WindowImplWin32.cpp">
+      <Filter>SFML\Window\Win32</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\SFML-2.0\src\Window\Context.cpp">
+      <Filter>SFML\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\SFML-2.0\src\Window\GlContext.cpp">
+      <Filter>SFML\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\SFML-2.0\src\Window\GlResource.cpp">
+      <Filter>SFML\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\SFML-2.0\src\Window\Joystick.cpp">
+      <Filter>SFML\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\SFML-2.0\src\Window\JoystickManager.cpp">
+      <Filter>SFML\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\SFML-2.0\src\Window\Keyboard.cpp">
+      <Filter>SFML\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\SFML-2.0\src\Window\Mouse.cpp">
+      <Filter>SFML\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\SFML-2.0\src\Window\VideoMode.cpp">
+      <Filter>SFML\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\SFML-2.0\src\Window\Window.cpp">
+      <Filter>SFML\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\SFML-2.0\src\Window\WindowImpl.cpp">
+      <Filter>SFML\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\SFML-2.0\src\System\Err.cpp">
+      <Filter>SFML\System</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\SFML-2.0\src\System\Lock.cpp">
+      <Filter>SFML\System</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\SFML-2.0\src\System\Mutex.cpp">
+      <Filter>SFML\System</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\SFML-2.0\src\System\Sleep.cpp">
+      <Filter>SFML\System</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\SFML-2.0\src\System\String.cpp">
+      <Filter>SFML\System</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\SFML-2.0\src\System\Thread.cpp">
+      <Filter>SFML\System</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\SFML-2.0\src\System\ThreadLocal.cpp">
+      <Filter>SFML\System</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\SFML-2.0\src\System\Time.cpp">
+      <Filter>SFML\System</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\SFML-2.0\src\System\Clock.cpp">
+      <Filter>SFML\System</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\SFML-2.0\src\System\Win32\SleepImpl.cpp">
+      <Filter>SFML\System\Win32</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\SFML-2.0\src\System\Win32\ThreadImpl.cpp">
+      <Filter>SFML\System\Win32</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\SFML-2.0\src\System\Win32\ThreadLocalImpl.cpp">
+      <Filter>SFML\System\Win32</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\SFML-2.0\src\System\Win32\ClockImpl.cpp">
+      <Filter>SFML\System\Win32</Filter>
+    </ClCompile>
+    <ClCompile Include="deps\SFML-2.0\src\System\Win32\MutexImpl.cpp">
+      <Filter>SFML\System\Win32</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Engine\Image.cpp">
+      <Filter>Legacy</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
