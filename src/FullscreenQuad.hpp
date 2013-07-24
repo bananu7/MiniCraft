@@ -25,6 +25,7 @@ public:
         // Vertex shader is trivial; it just covers the whole screen
         std::string vert = 
         "#version 400 core"
+        NL"// Fullscreen Quad Vert"
         NL "precision highp float;"
         NL "layout(location = 0) in vec2 in_position;"
         NL "layout(location = 1) in vec2 in_texcoord;"
@@ -36,6 +37,7 @@ public:
 
         std::string frag = 
         "#version 400 core"
+        NL"// Fullscreen Quad Frag"
         NL "precision highp float;"
         NL "out vec4 out_Color;"
         NL "in vec2 var_texCoord;"

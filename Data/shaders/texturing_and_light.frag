@@ -1,6 +1,8 @@
 #version 330 core
 
-out vec4 out_Color;
+// textures and lighting frag
+
+layout(location = 0) out vec4 out_Color;
 in vec2 var_texCoord;
 in vec3 var_lightIntensity;
 in float var_fogIntensity;

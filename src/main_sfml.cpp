@@ -58,7 +58,7 @@ public:
     Model fence;
     Player player;
 
-    glm::mat4 Projection, View;
+    glm::mat4 Projection;
 
     engine::CameraFly camera;
 
@@ -67,7 +67,7 @@ public:
     engine::Image image;
     engine::Image test_texture;
 
-    Line* g_L;
+    //Line* g_L;
     bool g_Run;
     bool consoleOn;
 
@@ -116,12 +116,14 @@ public:
 
         //initShadersEngine()
         {
-            auto initShader = [](std::shared_ptr<ProgramGLM>& shader, std::string const& vertPath, std::string const& fragPath) {
+            auto initShader = [&](std::shared_ptr<ProgramGLM>& shader, std::string const& vertPath, std::string const& fragPath) {
                 std::ifstream vert(vertPath);
                 std::ifstream frag(fragPath);
                 shader->attachShader(gldr::VertexShader(istreambuf_range(vert)));
                 shader->attachShader(gldr::FragmentShader(istreambuf_range(frag)));
                 shader->link();
+                shader->bindFragDataLocation("out_Color", 0);
+                shader->setUniform("Projection", Projection);
             };
 
             initShader(world_shader, "../Data/shaders/main_cubes.vert", "../Data/shaders/main_cubes.frag");
@@ -217,7 +219,7 @@ public:
                 world.recalcInstances();
             }
 
-            g_L->set(camera.Position, camera.Position + NormV * 30.f);
+            //g_L->set(camera.Position, camera.Position + NormV * 30.f);
             keys[sf::Keyboard::R] = false;
         }
         if (keys[sf::Keyboard::T]) // add
@@ -243,7 +245,7 @@ public:
             world.recalcInstances();
             */
 
-            g_L->set(camera.Position, camera.Position + NormV * 20.f);
+            //g_L->set(camera.Position, camera.Position + NormV * 20.f);
             keys[sf::Keyboard::T] = false;
         }
 
@@ -280,11 +282,11 @@ int main()
 
     App app;
 
-    Line L[3];
+    /*Line L[3];
     app.g_L = &L[2];
     L[0].set(glm::vec3(0, -0.05f, 0.f), glm::vec3(0, 0.05f, 0.f));
     L[1].set(glm::vec3(-0.05f, 0.f, 0.f), glm::vec3(0.05f, 0.f, 0.f));
-    L[2].set(glm::vec3(-0.05f, 0.f, 0.f), glm::vec3(0.05f, 0.f, 0.f));
+    L[2].set(glm::vec3(-0.05f, 0.f, 0.f), glm::vec3(0.05f, 0.f, 0.f));*/
 
     Font font;
     app.player.setDirection(app.camera.LookDir);
@@ -330,6 +332,12 @@ int main()
         for (auto const& error : errors) {
             log << error;
         }
+
+        auto dump = app.world_shader->debugDump();
+
+        log << "\n\n\n" << dump;
+
+        app.console.write(dump);
     }
 
     while (window.isOpen())
@@ -413,7 +421,7 @@ int main()
 
             app.camera.CalculateView();	
             glm::mat4 View = app.camera.GetViewMat();
-            app.world_shader->setUniform("View", app.View);
+            app.world_shader->setUniform("View", View);
             app.world_shader->setUniform("Eye", app.camera.Position);
 
             // world (cubes)
@@ -421,20 +429,20 @@ int main()
             gl::Enable(gl::DEPTH_TEST);
             app.world.draw();
 
-            app.trivial_shader->setUniform("View", app.View);
+            app.trivial_shader->setUniform("View", View);
 
-            app.texturing_shader->setUniform("View", app.View);
+            app.texturing_shader->setUniform("View", View);
             app.texturing_shader->setUniform("Eye", app.camera.Position);
             // test fence
             app.test_texture.bindToUnit(0);
             app.fence.draw();
 
             // crosshair
-            L[0].draw(glm::mat4(1.0), glm::mat4(1.0));
-            L[1].draw(glm::mat4(1.0), glm::mat4(1.0));
+            //L[0].draw(glm::mat4(1.0), glm::mat4(1.0));
+            //L[1].draw(glm::mat4(1.0), glm::mat4(1.0));
 
             // raycast line
-            L[2].draw(app.Projection, app.View);
+            //L[2].draw(app.Projection, app.View);
 
             // end preprocessing
             gldr::Framebuffer::unbind();

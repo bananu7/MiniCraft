@@ -23,6 +23,7 @@ public:
 
         std::string vert = 
         "#version 330 core"
+        NL"// Line Vert"
         NL "precision mediump float;"
         NL "layout(location = 0) in vec3 in_position;"
         NL "uniform mat4 Projection, View;"
@@ -32,6 +33,7 @@ public:
 
         std::string frag = 
         "#version 330 core"
+        NL"// Line Frag"
         NL "precision mediump float;"
         NL "out vec4 out_Color;"
         NL "void main () {"
