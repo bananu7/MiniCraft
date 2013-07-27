@@ -116,11 +116,15 @@ public:
 
         //initShadersEngine()
         {
+            std::ifstream light_file("../Data/shaders/light.vert");
+            gldr::VertexShader light(istreambuf_range(light_file));
+
             auto initShader = [&](std::shared_ptr<ProgramGLM>& shader, std::string const& vertPath, std::string const& fragPath) {
                 std::ifstream vert(vertPath);
                 std::ifstream frag(fragPath);
                 shader->attachShader(gldr::VertexShader(istreambuf_range(vert)));
                 shader->attachShader(gldr::FragmentShader(istreambuf_range(frag)));
+                shader->attachShader(light);
                 shader->link();
                 shader->bindFragDataLocation("out_Color", 0);
                 shader->setUniform("Projection", Projection);
@@ -129,13 +133,6 @@ public:
             initShader(world_shader, "../Data/shaders/main_cubes.vert", "../Data/shaders/main_cubes.frag");
             initShader(texturing_shader, "../Data/shaders/texturing_and_light.vert", "../Data/shaders/texturing_and_light.frag");
             initShader(trivial_shader, "../Data/shaders/trivial.vert", "../Data/shaders/trivial.frag");
-
-            /*texturing_shader->attachShader(gldr::VertexShader(istreambuf_range(std::ifstream("../Data/shaders/texturing_and_light.vert"))));
-            texturing_shader->attachShader(gldr::FragmentShader(istreambuf_range(std::ifstream("../Data/shaders/texturing_and_light.frag"))));
-
-            trivial_shader->attachShader(gldr::VertexShader(istreambuf_range(std::ifstream("../Data/shaders/trivial.vert"))));
-            trivial_shader->attachShader(gldr::FragmentShader(istreambuf_range(std::ifstream("../Data/shaders/trivial.frag"))));
-            */
         }
         //initResources()
         {

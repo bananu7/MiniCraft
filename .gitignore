@@ -1,7 +1,8 @@
-# Compiled Object files
+# MinGW files
 *.slo
 *.lo
 *.o
+MinGW
 
 # Compiled Dynamic libraries
 *.so
@@ -12,12 +13,14 @@
 *.la
 *.a
 
-#VS files
+#VS/Windows files
 *.sdf
 *.user
 *.sdf
 *.suo
 *.opensdf
+*.dll
+*.exe
 .sconsign.dblite
 Debug
 Release
