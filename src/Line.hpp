@@ -4,7 +4,7 @@
 
 #include <VertexBuffer.h>
 #include <VertexAttributeArray.h>
-#include <Program.hpp>
+#include "ProgramWithGLM.hpp"
 
 #include <string>
 #include <array>
@@ -55,14 +55,12 @@ public:
 
     void set (glm::vec3 const& start, glm::vec3 const& end)
     {
-        vao.bind();
         std::vector<glm::vec3> a(2);
         a[0] = start;
         a[1] = end;
         vbo.data(a);
-        vbo.bind();
-        gl::EnableVertexAttribArray(0);
-        gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE_, 0, 0);
+        vao.enableAttributeArray(0);
+        vao.directVertexAttribOffset(vbo, 0, 3, gldr::VertexAttributeType::Float, false, 0, 0);
     }
     void draw (glm::mat4 const& projection, glm::mat4 const& view)
     {

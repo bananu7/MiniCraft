@@ -67,7 +67,7 @@ public:
     engine::Image image;
     engine::Image test_texture;
 
-    //Line* g_L;
+    Line* g_L;
     bool g_Run;
     bool consoleOn;
 
@@ -219,7 +219,7 @@ public:
                 world.recalcInstances();
             }
 
-            //g_L->set(camera.Position, camera.Position + NormV * 30.f);
+            g_L->set(camera.Position, camera.Position + NormV * 30.f);
             keys[sf::Keyboard::R] = false;
         }
         if (keys[sf::Keyboard::T]) // add
@@ -245,7 +245,7 @@ public:
             world.recalcInstances();
             */
 
-            //g_L->set(camera.Position, camera.Position + NormV * 20.f);
+            g_L->set(camera.Position, camera.Position + NormV * 20.f);
             keys[sf::Keyboard::T] = false;
         }
 
@@ -282,11 +282,11 @@ int main()
 
     App app;
 
-    /*Line L[3];
+    Line L[3];
     app.g_L = &L[2];
     L[0].set(glm::vec3(0, -0.05f, 0.f), glm::vec3(0, 0.05f, 0.f));
     L[1].set(glm::vec3(-0.05f, 0.f, 0.f), glm::vec3(0.05f, 0.f, 0.f));
-    L[2].set(glm::vec3(-0.05f, 0.f, 0.f), glm::vec3(0.05f, 0.f, 0.f));*/
+    L[2].set(glm::vec3(-0.05f, 0.f, 0.f), glm::vec3(0.05f, 0.f, 0.f));
 
     Font font;
     app.player.setDirection(app.camera.LookDir);
@@ -318,9 +318,10 @@ int main()
 
 
     // temporary surrounding generation
-    for (int j = -1; j < 1; ++j)
-        for (int i = -1; i < 1; ++i) {
-            app.world.set(Minefield::WorldCoord(i*24, 1, j*24), 2);
+    for (int j = -2; j < 2; ++j)
+        for (int i = -2; i < 2; ++i) {
+            for (int y = 1; y > -1; --y)
+                app.world.set(Minefield::WorldCoord(i*24, y, j*24), 2);
         }
 
     app.world.recalcInstances();
@@ -438,11 +439,11 @@ int main()
             app.fence.draw();
 
             // crosshair
-            //L[0].draw(glm::mat4(1.0), glm::mat4(1.0));
-            //L[1].draw(glm::mat4(1.0), glm::mat4(1.0));
+            L[0].draw(glm::mat4(1.0), glm::mat4(1.0));
+            L[1].draw(glm::mat4(1.0), glm::mat4(1.0));
 
             // raycast line
-            //L[2].draw(app.Projection, app.View);
+            L[2].draw(app.Projection, View);
 
             // end preprocessing
             gldr::Framebuffer::unbind();

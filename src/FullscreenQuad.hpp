@@ -9,6 +9,9 @@
 #include <string>
 #include <array>
 
+#include <glm/glm.hpp>
+#include "ProgramWithGLM.hpp"
+
 #define NL "\n"
 
 class FullscreenQuad
@@ -92,8 +95,6 @@ public:
 
         program.setTex("screen", 0);
         
-        // vertex specification
-        vao.bind();
         //std::array<glm::vec2, 8> a;
         std::vector<glm::vec2> a(8);
         a[0] = glm::vec2(-1., -1.); a[1] = glm::vec2(0., 0.); 
@@ -101,22 +102,18 @@ public:
         a[4] = glm::vec2(-1., 1.);  a[5] = glm::vec2(0., 1.); 
         a[6] = glm::vec2(1., 1.);   a[7] = glm::vec2(1., 1.); 
         vbo.data(a);
-        vbo.bind();
-        gl::VertexAttribPointer(0, 2, gl::FLOAT, gl::FALSE_, sizeof(glm::vec2)*2, 0);
-        gl::VertexAttribPointer(1, 2, gl::FLOAT, gl::FALSE_, sizeof(glm::vec2)*2, (void*)(sizeof(glm::vec2)));
+        vao.enableAttributeArray(0);
+        vao.directVertexAttribOffset(vbo, 0, 2, gldr::VertexAttributeType::Float, false, sizeof(glm::vec2) * 2, 0);
+        vao.enableAttributeArray(1);
+        vao.directVertexAttribOffset(vbo, 1, 2, gldr::VertexAttributeType::Float, false, sizeof(glm::vec2) * 2, (sizeof(glm::vec2)));
     }
 
     void draw ()
     {
         vao.bind();
-        vbo.bind();
         program.bind();
-        gl::EnableVertexAttribArray(0);
-        gl::EnableVertexAttribArray(1);
         gl::Disable(gl::DEPTH_TEST);
         gl::DrawArrays(gl::TRIANGLE_STRIP, 0, 4);
         gl::Enable(gl::DEPTH_TEST);
-        gl::DisableVertexAttribArray(0);
-        gl::DisableVertexAttribArray(1);
     }
 };

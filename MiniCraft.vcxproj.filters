@@ -190,5 +190,11 @@
     <None Include="Data\shaders\texturing_and_light.vert">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="Data\shaders\trivial.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Data\shaders\trivial.vert">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

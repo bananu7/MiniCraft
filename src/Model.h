@@ -6,9 +6,10 @@
 #include <glm/glm.hpp>
 #include <glload/gl_4_3.hpp>
 
-#include "VertexBuffer.h"
-#include "VertexAttributeArray.h"
-#include "Shader.h"
+#include <VertexBuffer.h>
+#include <VertexAttributeArray.h>
+#include <Shader.h>
+#include "ProgramWithGLM.hpp"
 
 #include <string>
 #include <vector>
@@ -120,16 +121,12 @@ public:
         , shader(std::move(program))
     {
         rebuildData();
-        vao.bind();
         vao.enableAttributeArray(0);
-        vbo.bind();
-        gl::VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE_, 0, 0);
+        vao.directVertexAttribOffset(vbo, 0, 3, gldr::VertexAttributeType::Float, false, 0, 0);
         vao.enableAttributeArray(1);
-        texVbo.bind();
-        gl::VertexAttribPointer(1, 2, gl::FLOAT, gl::FALSE_, 0, 0);
+        vao.directVertexAttribOffset(texVbo, 1, 2, gldr::VertexAttributeType::Float, false, 0, 0);
         vao.enableAttributeArray(2);
-        normVbo.bind();
-        gl::VertexAttribPointer(2, 3, gl::FLOAT, gl::FALSE_, 0, 0);
+        vao.directVertexAttribOffset(normVbo, 2, 3, gldr::VertexAttributeType::Float, false, 0, 0);
     }
 
     std::shared_ptr<ProgramGLM>& getShader() { return shader; }
